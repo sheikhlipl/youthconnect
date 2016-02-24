@@ -32,6 +32,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+}
+
+repositories {
+    maven { url "https://jitpack.io" }
+    mavenCentral()
 }
 
 dependencies {
@@ -42,4 +53,7 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true;
     }
+    compile 'com.couchbase.lite:couchbase-lite-android:1.2.0'
+    compile 'com.google.api-client:google-api-client:1.19.1'
+    compile 'com.rengwuxian.materialedittext:library:2.1.4'
 }
