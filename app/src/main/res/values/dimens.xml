@@ -6,4 +6,10 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="splash_bottom_text_margin_bottom">12dp</dimen>
+    <dimen name="tabsHeight">48dp</dimen>
+    <dimen name="dashboard_count_margin">12dp</dimen>
+    <dimen name="dashboard_each_count_width_height">50dp</dimen>
+    <dimen name="dashboard_icon_circle_width_height">10dp</dimen>
+    <dimen name="dashboard_count_icon_margin">25dp</dimen>
 </resources>

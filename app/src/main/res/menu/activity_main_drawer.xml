@@ -1,36 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
-        <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
-        <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
-        <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
-    </group>
-
-    <item android:title="Communicate">
+    <item android:title="Q&amp;A Forum">
         <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/qa_forum"
+                    android:icon="@drawable/ic_menu_camera"
+                    android:title="Published" />
+                <item
+                    android:id="@+id/qa_pending"
+                    android:icon="@drawable/ic_menu_gallery"
+                    android:title="Pending" />
+                <item
+                    android:id="@+id/qa_answered"
+                    android:icon="@drawable/ic_menu_slideshow"
+                    android:title="Answered" />
+            </group>
         </menu>
     </item>
+    <item android:title="Miscellaneous">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/documentation"
+                    android:icon="@drawable/ic_menu_share"
+                    android:title="Documentation" />
+                <item
+                    android:id="@+id/feedback"
+                    android:icon="@drawable/ic_menu_send"
+                    android:title="Feedback" />
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Settings">
+        <menu>
+            <group android:checkableBehavior="single">
+            <item
+                android:id="@+id/change_password"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Change Password" />
+            <item
+                android:id="@+id/logout"
+                android:icon="@drawable/ic_menu_send"
+                android:title="Logout" />
+            </group>
+        </menu>
+    </item>
+
 
 </menu>
