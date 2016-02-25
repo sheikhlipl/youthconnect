@@ -1,8 +1,6 @@
 package com.luminous.dsys.youthconnect.home;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -15,27 +13,34 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.Emitter;
+import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.QueryRow;
-import com.lipl.youthconnect.youth_connect.R;
-import com.lipl.youthconnect.youth_connect.adapter.ShowcaseDataAdapterExp;
-import com.lipl.youthconnect.youth_connect.pojo.Doc;
-import com.lipl.youthconnect.youth_connect.util.Constants;
-import com.lipl.youthconnect.youth_connect.util.DatabaseUtil;
-import com.lipl.youthconnect.youth_connect.util.DocUtil;
-import com.lipl.youthconnect.youth_connect.util.YouthConnectSingleTone;
+import com.couchbase.lite.replicator.Replication;
+import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.activity.Application;
+import com.luminous.dsys.youthconnect.activity.MainActivity;
+import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
+import com.luminous.dsys.youthconnect.pojo.Doc;
+import com.luminous.dsys.youthconnect.pojo.FileToUpload;
+import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
+import com.luminous.dsys.youthconnect.util.Constants;
+import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -45,7 +50,8 @@ import java.util.List;
  * Use the {@link ShowcaseFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ShowcaseFragment extends Fragment {
+public class ShowcaseFragment extends Fragment implements
+        Replication.ChangeListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_CAMP_CODE = "campcode";
@@ -54,17 +60,15 @@ public class ShowcaseFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParamCampCode;
     private String mParam2;
+    private Application application;
 
     /**
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
-    private LinkedList<Doc> mListItems;
     private ListView listView;
     private ShowcaseDataAdapterExp adapter;
     private static final String TAG = "ShowcaseFragment";
-    private int doc_last_id = 0;
-    private ProgressBar pBar;
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -102,98 +106,26 @@ public class ShowcaseFragment extends Fragment {
         // Inflate the layout for this fragment
         final View view = inflater.inflate(R.layout.fragment_showcase, container, false);
 
-
+        if(application == null && getActivity() != null
+                && getActivity() instanceof MainActivity) {
+            application = ((MainActivity) getActivity()).application;
+        }
+        try {
+            showListInListView(getView());
+        } catch (CouchbaseLiteException exception){
+            Log.e(TAG, "onCreateView()", exception);
+        } catch(IOException exception){
+            Log.e(TAG, "onCreateView()", exception);
+        } catch(Exception exception){
+            Log.e(TAG, "onCreateView()", exception);
+        }
         return view;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        setPage(view);
-    }
 
-    private void setPage(final View view){
-
-        if(view == null || getActivity() == null){
-            return;
-        }
-
-        mListItems = new LinkedList<Doc>();
-        listView = (ListView) view.findViewById(R.id.showcaseEventRecycleList);
-        setNoRecordsTextView(view, mListItems);
-        adapter = new ShowcaseDataAdapterExp(mListItems, getActivity());
-        listView.setAdapter(adapter);
-
-        final AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
-            List<Doc> docList = new ArrayList<Doc>();
-//            ActivityIndicator activityIndicator = new ActivityIndicator(getActivity());
-//ProgressDialog progressDialog = null;
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                if(view != null) {
-                    ProgressBar pBar = (ProgressBar) view.findViewById(R.id.pBar);
-                    pBar.setVisibility(View.VISIBLE);
-                }
-//                if (isCancelled() == false && isVisible() == true
-//                        && getActivity() != null && activityIndicator != null) {
-//                    activityIndicator.show();
-//                }
-                //progressDialog = ProgressDialog.show(getActivity(), "Title", "Message");
-            }
-
-            @Override
-            protected Void doInBackground(Void... params) {
-                try {
-                    docList = getDocList();
-                } catch (CouchbaseLiteException exception) {
-                    Log.e(TAG, "onViewCreated()", exception);
-                } catch (IOException exception) {
-                    Log.e(TAG, "onViewCreated()", exception);
-                } catch (Exception exception) {
-                    Log.e(TAG, "onViewCreated()", exception);
-                } catch (OutOfMemoryError outOfMemoryError) {
-                    Log.e(TAG, "onViewCreated()", outOfMemoryError);
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);//progressDialog.dismiss();
-                /*if (isCancelled() == false && isVisible() == true
-                        && getActivity() != null && activityIndicator != null) {
-                    activityIndicator.dismiss();
-                }*/
-                if(view != null) {
-                    ProgressBar pBar = (ProgressBar) view.findViewById(R.id.pBar);
-                    pBar.setVisibility(View.GONE);
-                }
-                try {
-                    if (docList != null && docList.size() > 0) {
-                        if (mListItems == null) {
-                            mListItems = new LinkedList<Doc>();
-                        }
-                        mListItems.clear();
-                        mListItems.addAll(docList);
-                        setNoRecordsTextView(view, mListItems);
-                        adapter = new ShowcaseDataAdapterExp(mListItems, getActivity());
-                        listView.setAdapter(adapter);
-                        adapter.notifyDataSetChanged();
-                    }
-                } catch (Exception exception) {
-                    Log.e(TAG, "onViewCreated()", exception);
-                }
-            }
-        };
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                asyncTask.execute();
-            }
-        }, 2000);
     }
 
     private void setNoRecordsTextView(View view, List<Doc> listWhichIsSetToList){
@@ -203,52 +135,6 @@ public class ShowcaseFragment extends Fragment {
         } else {
             tvNoRecordFoundText.setVisibility(View.VISIBLE);
         }
-    }
-
-    private List<Doc> getDocList() throws CouchbaseLiteException, IOException {
-
-        if(getActivity() == null){
-            return null;
-        }
-
-        List<Doc> docList = new ArrayList<Doc>();
-        List<String> ids = getAllDocumentIds();
-        if(ids != null && ids.size() > 0) {
-            for (String id : ids) {
-                com.couchbase.lite.Document document = DatabaseUtil.getDocumentFromDocumentId(DatabaseUtil.getDatabaseInstance(getActivity(),
-                        Constants.YOUTH_CONNECT_DATABASE), id);
-                Doc doc = DocUtil.getDocFromDocument(document);
-                if (doc != null && doc.getIs_published() == 1) {
-                    docList.add(doc);
-                }
-            }
-        }
-        return docList;
-    }
-
-    private List<String> getAllDocumentIds(){
-
-        if(getActivity() == null){
-            return null;
-        }
-
-        List<String> docIds = new ArrayList<String>();
-        try {
-            Database database = DatabaseUtil.getDatabaseInstance(getActivity(), Constants.YOUTH_CONNECT_DATABASE);
-            Query query = database.createAllDocumentsQuery();
-            query.setAllDocsMode(Query.AllDocsMode.BY_SEQUENCE);
-            QueryEnumerator result = query.run();
-            for (Iterator<QueryRow> it = result; it.hasNext(); ) {
-                QueryRow row = it.next();
-                docIds.add(row.getDocumentId());
-            }
-        } catch(CouchbaseLiteException exception){
-            Log.e(TAG, "Error", exception);
-        } catch (IOException exception){
-            com.couchbase.lite.util.Log.e(TAG, "onDeleteClick()", exception);
-        }
-
-        return docIds;
     }
 
     /**
@@ -311,8 +197,6 @@ public class ShowcaseFragment extends Fragment {
 
         FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
         ft.addToBackStack(Constants.FRAGMENT_HOME_SHOWCASE_PAGE);
-        YouthConnectSingleTone.getInstance().currentFragmentOnMainActivity = Constants.FRAGMENT_HOME_SHOWCASE;
-        YouthConnectSingleTone.getInstance().CURRENT_FRAGMENT_IN_HOME = Constants.FRAGMENT_HOME_SUB_FRAGMENT_SHOWCASE;
         //setPage(getView());
     }
 
@@ -320,13 +204,74 @@ public class ShowcaseFragment extends Fragment {
     public void onDestroy() {
         System.gc();
         super.onDestroy();
-//        RefWatcher refWatcher = Application.getRefWatcher(getActivity());
-//        refWatcher.watch(this);
     }
 
     @Override
     public void onDestroyView() {
         System.gc();
         super.onDestroyView();
+    }
+
+    @Override
+    public void changed(Replication.ChangeEvent event) {
+        Replication replication = event.getSource();
+        com.couchbase.lite.util.Log.i(TAG, "Replication : " + replication + "changed.");
+        if(!replication.isRunning()){
+            String msg = String.format("Replicator %s not running", replication);
+            com.couchbase.lite.util.Log.i(TAG, msg);
+        } else{
+            int processed = replication.getCompletedChangesCount();
+            int total = replication.getChangesCount();
+            String msg = String.format("Replicator processed %d / %d", processed, total);
+            com.couchbase.lite.util.Log.i(TAG, msg);
+        }
+
+        if(event.getError() != null){
+            showError("Sync error", event.getError());
+        }
+
+        if(getActivity() != null && getView() != null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        showListInListView(getView());
+                    } catch (CouchbaseLiteException exception) {
+                        com.couchbase.lite.util.Log.e(TAG, "changed()", exception);
+                    } catch (IOException exception) {
+                        com.couchbase.lite.util.Log.e(TAG, "changed()", exception);
+                    }
+                }
+            });
+        }
+    }
+
+    public void showError(final String  errorMessage, final Throwable throwable){
+        if(getActivity() != null) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String msg = String.format("%s: %s", errorMessage, throwable);
+                    com.couchbase.lite.util.Log.e(TAG, msg, throwable);
+                    Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
+    private void showListInListView(View view) throws CouchbaseLiteException, IOException {
+        listView = (ListView) view.findViewById(R.id.showcaseEventRecycleList);
+        if(application == null && getActivity() != null
+                && getActivity() instanceof MainActivity) {
+            application = ((MainActivity) getActivity()).application;
+        }
+
+        if(getActivity() != null
+                && application != null
+                && application.getDOCQuery(application.getDatabase()) != null) {
+            adapter = new ShowcaseDataAdapterExp(getActivity(),
+                    application.getDOCQuery(application.getDatabase()).toLiveQuery());
+            listView.setAdapter(adapter);
+        }
     }
 }
