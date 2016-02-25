@@ -19,4 +19,12 @@
         <item>#fcba59</item>
         <item>#24c6d5</item>
     </string-array>
+    <string name="no_app_found_title">Unable to Open</string>
+    <string name="no_app_found_message">There is no application available to open this file.</string>
+
+    <string name="activity_ask_a_question_title">Ask Anything</string>
+    <string name="activity_pending_question_title">UnAnswered</string>
+    <string name="activity_answered_question_title">Answered</string>
+    <string name="activity_published_question_title">Published</string>
+    <string name="post_question_text">POST MY QUESTION</string>
 </resources>

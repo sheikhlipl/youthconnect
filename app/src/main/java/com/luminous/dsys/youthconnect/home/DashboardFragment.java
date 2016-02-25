@@ -1,10 +1,6 @@
 package com.luminous.dsys.youthconnect.home;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -23,12 +19,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.couchbase.lite.replicator.Replication;
-import com.luminous.dsys.youthconnect.MainActivity;
 import com.luminous.dsys.youthconnect.R;
-import com.luminous.dsys.youthconnect.pojo.Dashboard;
 import com.luminous.dsys.youthconnect.util.Constants;
-
-import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.

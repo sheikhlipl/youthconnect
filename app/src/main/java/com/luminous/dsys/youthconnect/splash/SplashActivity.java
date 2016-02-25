@@ -10,8 +10,8 @@ import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
 import com.crashlytics.android.Crashlytics;
-import com.luminous.dsys.youthconnect.MainActivity;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.activity.MainActivity;
 import com.luminous.dsys.youthconnect.login.LoginActivity;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;

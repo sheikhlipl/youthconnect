@@ -2,7 +2,7 @@
  * Created by Pasin Suriyentrakorn <pasin@couchbase.com> on 2/26/14.
  */
 
-package com.luminous.dsys.youthconnect.util;
+package com.luminous.dsys.youthconnect.activity;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -13,18 +13,22 @@ import android.content.pm.PackageManager;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.Emitter;
 import com.couchbase.lite.Manager;
+import com.couchbase.lite.Mapper;
+import com.couchbase.lite.Query;
 import com.couchbase.lite.android.AndroidContext;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.crashlytics.android.Crashlytics;
 import com.google.api.client.http.HttpResponseException;
-import com.luminous.dsys.youthconnect.MainActivity;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Observable;
 
 import io.fabric.sdk.android.Fabric;
@@ -43,6 +47,12 @@ public class Application extends android.app.Application {
 
     private OnSyncProgressChangeObservable onSyncProgressChangeObservable;
     private OnSyncUnauthorizedObservable onSyncUnauthorizedObservable;
+
+    private com.couchbase.lite.View qaView = null;
+    private com.couchbase.lite.View docView = null;
+
+    private static final String QA_VIEW_NAME = "qalists";
+    private static final String DOC_VIEW_NAME = "doclists";
 
     public enum AuthenticationType { FACEBOOK, ALL }
 
@@ -91,7 +101,6 @@ public class Application extends android.app.Application {
                 .addChangeListener(getReplicationChangeListener())
                 .build();
         sync.start();
-
     }
 
     public void stopSync() {
@@ -162,6 +171,33 @@ public class Application extends android.app.Application {
 
         initDatabase();
         initObservable();
+
+        qaView = database.getView(QA_VIEW_NAME);
+        docView = database.getView(DOC_VIEW_NAME);
+
+        if (qaView.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)) {
+                        emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
+                    }
+                }
+            };
+            qaView.setMap(mapper, "1");
+        }
+
+        if (docView.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_DOCUMENT.equals(type)) {
+                        emitter.emit(document.get(BuildConfigYouthConnect.DOC_CREATED), document);
+                    }
+                }
+            };
+            docView.setMap(mapper, "1");
+        }
 
     }
 
@@ -240,6 +276,20 @@ public class Application extends android.app.Application {
         public int completedCount;
         public int totalCount;
         public Replication.ReplicationStatus status;
+    }
+
+    public Query getQAQuery(Database database) {
+        Query query = qaView.createQuery();
+        query.setDescending(true);
+
+        return query;
+    }
+
+    public Query getDOCQuery(Database database) {
+        Query query = docView.createQuery();
+        query.setDescending(true);
+
+        return query;
     }
 
 }

@@ -6,11 +6,11 @@
         android:orderInCategory="100"
         android:icon="@drawable/ic_action_help"
         android:title="@string/action_ask_question"
-        app:showAsAction="never" />
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_create_document"
         android:orderInCategory="100"
         android:icon="@drawable/ic_attach_file"
         android:title="@string/action_create_document"
-        app:showAsAction="never" />
+        app:showAsAction="always" />
 </menu>

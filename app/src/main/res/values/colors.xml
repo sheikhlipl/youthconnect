@@ -15,8 +15,12 @@
     <color name="dashboard_doc_bg">#7C4DFF</color>
     <color name="textColorPrimary">#212121</color>
     <color name="secondary_text_color">#727272</color>
+    <color name="light_gray">#e3e2dd</color>
 
     <color name="dashboard_questions_answered">#FF5454</color>
     <color name="dashboard_pending_feedbacks">#67C2EF</color>
+
+    <color name="ask_a_qa_bg">#fafafa</color>
+    <color name="ask_text_color">#7dc133</color>
 
 </resources>
