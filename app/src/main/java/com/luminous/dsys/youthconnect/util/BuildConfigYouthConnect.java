@@ -31,6 +31,8 @@ public class BuildConfigYouthConnect {
     public static final String QA_IS_ANSWERED = "is_answered";
     public static final String QA_IS_PUBLISHED = "is_published";
     public static final String QA_IS_UPLOADED = "is_uploaded";
+    public static final String QA_IS_READ = "is_qa_read";
+    public static final String QA_IS_DELETE = "is_qa_delete";
 
     public static final String DISTRICTS = "districts";
     public static final String NODAL_OFFICERS = "users";
@@ -45,4 +47,6 @@ public class BuildConfigYouthConnect {
     public static final String DOC_CREATED_BY_USER_ID = "created_by_user_id";
     public static final String DOC_ASSIGNED_TO_USER_IDS = "doc_assigned_to_user_ids";
     public static final String DOC_IS_UPLOADED = "is_uploaded";
+    public static final String DOC_IS_READ = "is_doc_read";
+    public static final String DOC_IS_DELETE = "is_doc_delete";
 }

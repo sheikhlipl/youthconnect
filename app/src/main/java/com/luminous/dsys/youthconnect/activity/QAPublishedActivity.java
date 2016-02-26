@@ -20,10 +20,12 @@ import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.qa.QaListAdapter;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by luminousinfoways on 18/12/15.
@@ -178,6 +180,13 @@ public class QAPublishedActivity extends BaseActivity implements
             startActivity(intent);
             return true;
         } else if (id == R.id.action_create_document) {
+            Intent intent = new Intent(QAPublishedActivity.this, AttachFileActivity.class);
+            if (AttachFileActivity.fileUploadList != null) {
+                AttachFileActivity.fileUploadList.clear();
+            } else {
+                AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
+            }
+            startActivity(intent);
             return true;
         }
 
@@ -192,8 +201,9 @@ public class QAPublishedActivity extends BaseActivity implements
 
     private void showListInListView() throws CouchbaseLiteException, IOException {
         mListView = (SwipeMenuListView) findViewById(R.id.listView);
-        if(application.getQAQuery(application.getDatabase()) != null) {
-            mAdapter = new QaListAdapter(this, application.getQAQuery(application.getDatabase()).toLiveQuery(),
+        if(application.getQAPublishedForQuery(application.getDatabase()) != null) {
+            mAdapter = new QaListAdapter(this, application.getQAPublishedForQuery
+                    (application.getDatabase()).toLiveQuery(),
                     this, this, true, false, false);
             mListView.setAdapter(mAdapter);
         }

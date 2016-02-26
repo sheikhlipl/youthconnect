@@ -17,30 +17,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.Database;
-import com.couchbase.lite.Document;
-import com.couchbase.lite.Emitter;
-import com.couchbase.lite.Mapper;
-import com.couchbase.lite.Query;
-import com.couchbase.lite.QueryEnumerator;
-import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.replicator.Replication;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.Application;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
-import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
 import com.luminous.dsys.youthconnect.pojo.Doc;
-import com.luminous.dsys.youthconnect.pojo.FileToUpload;
-import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
-import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -268,9 +253,9 @@ public class ShowcaseFragment extends Fragment implements
 
         if(getActivity() != null
                 && application != null
-                && application.getDOCQuery(application.getDatabase()) != null) {
+                && application.getPublishedDocQuery(application.getDatabase()) != null) {
             adapter = new ShowcaseDataAdapterExp(getActivity(),
-                    application.getDOCQuery(application.getDatabase()).toLiveQuery());
+                    application.getPublishedDocQuery(application.getDatabase()).toLiveQuery());
             listView.setAdapter(adapter);
         }
     }

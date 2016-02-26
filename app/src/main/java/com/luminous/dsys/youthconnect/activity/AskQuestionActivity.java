@@ -2,6 +2,7 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
+import com.luminous.dsys.youthconnect.BuildConfig;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
@@ -169,6 +171,8 @@ public class AskQuestionActivity extends BaseActivity implements View.OnClickLis
         map.put(BuildConfigYouthConnect.QA_IS_ANSWERED, 0);
         map.put(BuildConfigYouthConnect.QA_IS_PUBLISHED, 0);
         map.put(BuildConfigYouthConnect.QA_IS_UPLOADED, 0);
+        map.put(BuildConfigYouthConnect.QA_IS_READ, 0);
+        map.put(BuildConfigYouthConnect.QA_IS_DELETE, 0);
         map.put(BuildConfigYouthConnect.QA_ANSWER, new ArrayList<Answer>());
         map.put(BuildConfigYouthConnect.QA_COMMENT, new ArrayList<Comment>());
         try {

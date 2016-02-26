@@ -27,4 +27,8 @@
     <string name="activity_answered_question_title">Answered</string>
     <string name="activity_published_question_title">Published</string>
     <string name="post_question_text">POST MY QUESTION</string>
+    <string name="post_answer_text">POST ANSWER</string>
+    <string name="activity_attach_file_title">Attach File</string>
+    <string name="activity_doc_list_title">Documents</string>
+    <string name="activity_nodal_officers_list_title">Nodal Officers</string>
 </resources>
