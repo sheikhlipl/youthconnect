@@ -10,6 +10,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
@@ -23,11 +24,16 @@ import com.couchbase.lite.util.Log;
 import com.crashlytics.android.Crashlytics;
 import com.google.api.client.http.HttpResponseException;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
+import com.luminous.dsys.youthconnect.util.Constants;
 
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 
@@ -48,11 +54,27 @@ public class Application extends android.app.Application {
     private OnSyncProgressChangeObservable onSyncProgressChangeObservable;
     private OnSyncUnauthorizedObservable onSyncUnauthorizedObservable;
 
-    private com.couchbase.lite.View qaView = null;
-    private com.couchbase.lite.View docView = null;
+    private com.couchbase.lite.View qaAnsweredNodalView = null;
+    private com.couchbase.lite.View qaUnAnsweredNodalView = null;
 
-    private static final String QA_VIEW_NAME = "qalists";
-    private static final String DOC_VIEW_NAME = "doclists";
+    private com.couchbase.lite.View qaAnsweredAdminView = null;
+    private com.couchbase.lite.View qaUnAnsweredAdminView = null;
+    private com.couchbase.lite.View qaPublishedView = null;
+
+    private com.couchbase.lite.View docViewForAdmin = null;
+    private com.couchbase.lite.View docViewForNodal = null;
+    private com.couchbase.lite.View docViewPublished = null;
+
+    private static final String QA_VIEW_NAME_ANSWERED_NODAL = "qalists_answered_nodal";
+    private static final String QA_VIEW_NAME_UNANSWERED_NODAL = "qalists_unanswered_nodal";
+
+    private static final String QA_VIEW_NAME_ANSWERED_ADMIN = "qalists_answered_admin";
+    private static final String QA_VIEW_NAME_UNANSWERED_ADMIN = "qalists_unanswered_admin";
+    private static final String QA_VIEW_NAME_PUBLISHED = "qalists_published";
+
+    private static final String DOC_VIEW_NAME_ADMIN = "doclists_admin";
+    private static final String DOC_VIEW_NAME_NODAL = "doclists_nodal";
+    private static final String DOC_VIEW_NAME_PUBLISH = "doclists_publish";
 
     public enum AuthenticationType { FACEBOOK, ALL }
 
@@ -172,33 +194,170 @@ public class Application extends android.app.Application {
         initDatabase();
         initObservable();
 
-        qaView = database.getView(QA_VIEW_NAME);
-        docView = database.getView(DOC_VIEW_NAME);
+        qaAnsweredAdminView = database.getView(QA_VIEW_NAME_ANSWERED_ADMIN);
+        qaUnAnsweredAdminView = database.getView(QA_VIEW_NAME_UNANSWERED_ADMIN);
 
-        if (qaView.getMap() == null) {
+        qaAnsweredNodalView = database.getView(QA_VIEW_NAME_ANSWERED_NODAL);
+        qaUnAnsweredNodalView = database.getView(QA_VIEW_NAME_UNANSWERED_NODAL);
+        qaPublishedView = database.getView(QA_VIEW_NAME_PUBLISHED);
+
+        docViewForAdmin = database.getView(DOC_VIEW_NAME_ADMIN);
+        docViewForNodal = database.getView(DOC_VIEW_NAME_NODAL);
+        docViewPublished = database.getView(DOC_VIEW_NAME_PUBLISH);
+
+        if (qaAnsweredAdminView.getMap() == null) {
             Mapper mapper = new Mapper() {
                 public void map(Map<String, Object> document, Emitter emitter) {
-                    String type = (String) document.get("type");
-                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)) {
+                String type = (String) document.get("type");
+                if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)){
+                    int is_delete = (Integer) document.get(BuildConfigYouthConnect.QA_IS_DELETE);
+                    int is_answered = (Integer) document.get(BuildConfigYouthConnect.QA_IS_ANSWERED);
+                    if( is_delete == 0 && is_answered == 1) {
                         emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
                     }
                 }
+                }
             };
-            qaView.setMap(mapper, "1");
+            qaAnsweredAdminView.setMap(mapper, "1");
         }
 
-        if (docView.getMap() == null) {
+        if (qaAnsweredNodalView.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)){
+                        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                .getInt(Constants.SP_USER_ID, 0);
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.QA_IS_DELETE);
+                        int is_answered = (Integer) document.get(BuildConfigYouthConnect.QA_IS_ANSWERED);
+                        int asked_by_user_id = (Integer) document.get(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                        if(is_delete == 0 && is_answered == 1
+                            && currently_logged_in_user_id == asked_by_user_id) {
+                            emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
+                        }
+                    }
+                }
+            };
+            qaAnsweredNodalView.setMap(mapper, "1.1");
+        }
+
+        if (qaUnAnsweredAdminView.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)){
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.QA_IS_DELETE);
+                        int is_answered = (Integer) document.get(BuildConfigYouthConnect.QA_IS_ANSWERED);
+                        if(is_delete == 0 && is_answered == 0) {
+                            emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
+                        }
+                    }
+                }
+            };
+            qaUnAnsweredAdminView.setMap(mapper, "1");
+        }
+
+        if (qaUnAnsweredNodalView.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)){
+                        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                .getInt(Constants.SP_USER_ID, 0);
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.QA_IS_DELETE);
+                        int is_answered = (Integer) document.get(BuildConfigYouthConnect.QA_IS_ANSWERED);
+                        int asked_by_user_id = (Integer) document.get(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                        if( is_delete == 0 && is_answered == 0
+                            && currently_logged_in_user_id == asked_by_user_id) {
+                            emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
+                        }
+                    }
+                }
+            };
+            qaUnAnsweredNodalView.setMap(mapper, "1");
+        }
+
+        if (qaPublishedView.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)){
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.QA_IS_DELETE);
+                        int is_published = (Integer) document.get(BuildConfigYouthConnect.QA_IS_PUBLISHED);
+                        if(is_delete == 0 && is_published == 1){
+                            emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
+                        }
+                    }
+                }
+            };
+            qaPublishedView.setMap(mapper, "1");
+        }
+
+        if (docViewForAdmin.getMap() == null) {
             Mapper mapper = new Mapper() {
                 public void map(Map<String, Object> document, Emitter emitter) {
                     String type = (String) document.get("type");
                     if (BuildConfigYouthConnect.DOC_TYPE_FOR_DOCUMENT.equals(type)) {
-                        emitter.emit(document.get(BuildConfigYouthConnect.DOC_CREATED), document);
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.DOC_IS_DELETE);
+                        if(is_delete == 0) {
+                            emitter.emit(document.get(BuildConfigYouthConnect.DOC_CREATED), document);
+                        }
                     }
                 }
             };
-            docView.setMap(mapper, "1");
+            docViewForAdmin.setMap(mapper, "1");
         }
 
+        if (docViewForNodal.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if(BuildConfigYouthConnect.DOC_TYPE_FOR_DOCUMENT.equals(type)) {
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.DOC_IS_DELETE);
+                        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                .getInt(Constants.SP_USER_ID, 0);
+
+                        ArrayList<LinkedHashMap<String, Object>> assignedToUserIds =
+                                (ArrayList<LinkedHashMap<String, Object>>)
+                                        document.get(BuildConfigYouthConnect.DOC_ASSIGNED_TO_USER_IDS);
+
+                        int count = 0;
+
+                        for (LinkedHashMap<String, Object> obj : assignedToUserIds) {
+                            AssignedToUSer assignedToUSer = new AssignedToUSer();
+                            assignedToUSer.setUser_name((String)obj.get("user_name"));
+                            assignedToUSer.setUser_id((Integer)obj.get("user_id"));
+                            if (assignedToUSer != null && assignedToUSer.getUser_id()
+                                    == currently_logged_in_user_id) {
+                                count++;
+                            }
+                        }
+
+                        if (is_delete == 0
+                                && count > 0) {
+                            emitter.emit(document.get(BuildConfigYouthConnect.DOC_CREATED), document);
+                        }
+                    }
+                }
+            };
+            docViewForNodal.setMap(mapper, "1");
+        }
+
+        if (docViewPublished.getMap() == null) {
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if(BuildConfigYouthConnect.DOC_TYPE_FOR_DOCUMENT.equals(type)) {
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.DOC_IS_DELETE);
+                        int is_publish = (Integer) document.get(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
+                        if (is_delete == 0 && is_publish == 1) {
+                            emitter.emit(document.get(BuildConfigYouthConnect.DOC_CREATED), document);
+                        }
+                    }
+                }
+            };
+            docViewPublished.setMap(mapper, "1");
+        }
     }
 
     private void migrateOldVersion() {
@@ -278,15 +437,57 @@ public class Application extends android.app.Application {
         public Replication.ReplicationStatus status;
     }
 
-    public Query getQAQuery(Database database) {
-        Query query = qaView.createQuery();
+    public Query getQAUnAnsweredForAdminQuery(Database database) {
+        Query query = qaUnAnsweredAdminView.createQuery();
         query.setDescending(true);
 
         return query;
     }
 
-    public Query getDOCQuery(Database database) {
-        Query query = docView.createQuery();
+    public Query getQAAnsweredForAdminQuery(Database database) {
+        Query query = qaAnsweredAdminView.createQuery();
+        query.setDescending(true);
+
+        return query;
+    }
+
+    public Query getQAPublishedForQuery(Database database) {
+        Query query = qaPublishedView.createQuery();
+        query.setDescending(true);
+
+        return query;
+    }
+
+    public Query getQAUnAnsweredForNodalQuery(Database database) {
+        Query query = qaUnAnsweredNodalView.createQuery();
+        query.setDescending(true);
+
+        return query;
+    }
+
+    public Query getQAAnsweredForNodalQuery(Database database) {
+        Query query = qaAnsweredNodalView.createQuery();
+        query.setDescending(true);
+
+        return query;
+    }
+
+    public Query getPublishedDocQuery(Database database) {
+        Query query = docViewPublished.createQuery();
+        query.setDescending(true);
+
+        return query;
+    }
+
+    public Query getDocForAdminQuery(Database database) {
+        Query query = docViewForAdmin.createQuery();
+        query.setDescending(true);
+
+        return query;
+    }
+
+    public Query getDocForNodalQuery(Database database) {
+        Query query = docViewForNodal.createQuery();
         query.setDescending(true);
 
         return query;

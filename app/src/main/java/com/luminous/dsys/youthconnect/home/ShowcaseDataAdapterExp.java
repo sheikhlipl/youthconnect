@@ -167,12 +167,6 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
         public void onBindViewHolder(RecyclerView.ViewHolder rawHolder, int position) {
             ItemViewHolder holder = (ItemViewHolder) rawHolder;
 
-            String uploadfile = null;
-            if (mDataList != null && mDataList.size() > 0) {
-                FileToUpload documentUpload = mDataList.get(position);
-                uploadfile = documentUpload.getFile_name();
-            }
-
             holder.img.setImageResource(R.drawable.ic_insert_drive_file);
             holder.img.setBackgroundResource(R.color.blue);
             holder.img.setTag(position);

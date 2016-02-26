@@ -26,9 +26,11 @@ import com.luminous.dsys.youthconnect.database.DBHelper;
 import com.luminous.dsys.youthconnect.home.DashboardFragment;
 import com.luminous.dsys.youthconnect.home.HomeRecyclerAdapter;
 import com.luminous.dsys.youthconnect.login.LoginActivity;
+import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -203,6 +205,13 @@ public class MainActivity extends BaseActivity
             startActivity(intent);
             return true;
         } else if (id == R.id.action_create_document) {
+            Intent intent = new Intent(MainActivity.this, AttachFileActivity.class);
+            if (AttachFileActivity.fileUploadList != null) {
+                AttachFileActivity.fileUploadList.clear();
+            } else {
+                AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
+            }
+            startActivity(intent);
             return true;
         }
 
@@ -227,7 +236,8 @@ public class MainActivity extends BaseActivity
             Intent intent = new Intent(this, QAAnsweredActivity.class);
             startActivity(intent);
         } else if (id == R.id.documentation) {
-
+            Intent intent = new Intent(this, DocListActivity.class);
+            startActivity(intent);
         } else if (id == R.id.feedback) {
 
         } else if (id == R.id.change_password) {

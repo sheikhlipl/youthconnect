@@ -20,10 +20,13 @@ import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.qa.QaListAdapter;
+import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by luminousinfoways on 18/12/15.
@@ -178,6 +181,13 @@ public class QAAnsweredActivity extends BaseActivity implements
             startActivity(intent);
             return true;
         } else if (id == R.id.action_create_document) {
+            Intent intent = new Intent(QAAnsweredActivity.this, AttachFileActivity.class);
+            if (AttachFileActivity.fileUploadList != null) {
+                AttachFileActivity.fileUploadList.clear();
+            } else {
+                AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
+            }
+            startActivity(intent);
             return true;
         }
 
@@ -192,10 +202,26 @@ public class QAAnsweredActivity extends BaseActivity implements
 
     private void showListInListView() throws CouchbaseLiteException, IOException {
         mListView = (SwipeMenuListView) findViewById(R.id.listView);
-        if(application.getQAQuery(application.getDatabase()) != null) {
-            mAdapter = new QaListAdapter(this, application.getQAQuery(application.getDatabase()).toLiveQuery(),
-                    this, this, false, false, true);
-            mListView.setAdapter(mAdapter);
+
+        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
+                .getInt(Constants.SP_USER_ID, 0);
+
+        if(currently_logged_in_user_id == 1){
+            //User is Admin
+            if(application.getQAAnsweredForAdminQuery(application.getDatabase()) != null) {
+                mAdapter = new QaListAdapter(this, application.getQAAnsweredForAdminQuery
+                        (application.getDatabase()).toLiveQuery(),
+                        this, this, false, false, true);
+                mListView.setAdapter(mAdapter);
+            }
+        } else{
+            //User is nodal Officer
+            if(application.getQAAnsweredForNodalQuery(application.getDatabase()) != null) {
+                mAdapter = new QaListAdapter(this, application.getQAAnsweredForNodalQuery
+                        (application.getDatabase()).toLiveQuery(),
+                        this, this, false, false, true);
+                mListView.setAdapter(mAdapter);
+            }
         }
     }
 
