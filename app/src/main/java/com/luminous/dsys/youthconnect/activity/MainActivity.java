@@ -26,6 +26,7 @@ import com.luminous.dsys.youthconnect.database.DBHelper;
 import com.luminous.dsys.youthconnect.home.DashboardFragment;
 import com.luminous.dsys.youthconnect.home.HomeRecyclerAdapter;
 import com.luminous.dsys.youthconnect.login.LoginActivity;
+import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -76,63 +77,7 @@ public class MainActivity extends BaseActivity
         tvUserEmail.setText(user_email);
 
         initViewPagerSetUp();
-
-//        application.setDatabase();
-
-//        application.getOnSyncProgressChangeObservable().addObserver(new Observer() {
-//            @Override
-//            public void update(final Observable observable, final Object data) {
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        Application.SyncProgress progress = (Application.SyncProgress) data;
-//                        Log.d(TAG, "Sync progress changed.  Completed: %d Total: %d Status: %s", progress.completedCount, progress.totalCount, progress.status);
-//
-//                        if (progress.status == Replication.ReplicationStatus.REPLICATION_ACTIVE) {
-//                            Log.d(TAG, "Turn on progress spinny");
-//                            setProgressBarIndeterminateVisibility(true);
-//                        } else {
-//                            Log.d(TAG, "Turn off progress spinny");
-//                            setProgressBarIndeterminateVisibility(false);
-//                        }
-//                    }
-//                });
-//            }
-//        });
-//
-//        application.getOnSyncUnauthorizedObservable().addObserver(new Observer() {
-//            @Override
-//            public void update(Observable observable, Object data) {
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//
-//                        Log.d(Application.TAG, "OnSyncUnauthorizedObservable called, show toast");
-//
-//                        // clear the saved user id, since our session is no longer valid
-//                        // and we want to show the login button
-//
-//                        String msg = "Sync unable to continue due to invalid session/login";
-//                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
-//
-//                    }
-//                });
-//
-//            }
-//        });
     }
-
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        application.startReplicationSync();
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        application.stopSync();
-//    }
 
     @Override
     public void onDashboardFragmentInteraction(DashboardFragment dashboardFragment) {
@@ -210,6 +155,11 @@ public class MainActivity extends BaseActivity
                 AttachFileActivity.fileUploadList.clear();
             } else {
                 AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
+            }
+            if (AttachFileActivity.fileToUploads != null) {
+                AttachFileActivity.fileToUploads.clear();
+            } else {
+                AttachFileActivity.fileToUploads = new ArrayList<FileToUpload>();
             }
             startActivity(intent);
             return true;

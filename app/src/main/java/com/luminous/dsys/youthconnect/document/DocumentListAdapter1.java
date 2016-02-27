@@ -1,4 +1,4 @@
-package com.luminous.dsys.youthconnect.home;
+package com.luminous.dsys.youthconnect.document;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -20,13 +20,16 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
+import com.luminous.dsys.youthconnect.activity.NodalOfficerActivity;
 import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
-import com.luminous.dsys.youthconnect.pojo.FileToUpload;
+import com.luminous.dsys.youthconnect.pojo.Doc;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
+import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.BufferedInputStream;
@@ -38,21 +41,234 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Created by luminousinfoways on 04/01/16.
+ * Created by Android Luminous on 2/13/2016.
  */
-public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
+public class DocumentListAdapter1 extends LiveQueryAdapter {
 
     private LiveQuery liveQuery;
     private Context context;
+    private OnDeleteClickListener onDeleteClickListener;
+    private OnUpdateClickListenr onUpdateClickListenr;
+    private HashMap<Integer, Boolean> mSelection = new HashMap<Integer, Boolean>();
+    private static final String TAG = "DocList";
 
-    public ShowcaseDataAdapterExp(Context context, LiveQuery liveQuery) {
+    public DocumentListAdapter1(Context context, LiveQuery liveQuery,
+                                OnDeleteClickListener onDeleteClickListener,
+                                OnUpdateClickListenr onUpdateClickListenr){
         super(context, liveQuery);
-        this.liveQuery = liveQuery;
         this.context = context;
+        this.liveQuery = liveQuery;
+        this.onDeleteClickListener = onDeleteClickListener;
+        this.onUpdateClickListenr = onUpdateClickListenr;
     }
+
+    public void setNewSelection(int position, boolean value) {
+        mSelection.put(position, value);
+        notifyDataSetChanged();
+    }
+
+    public boolean isPositionChecked(int position) {
+        Boolean result = mSelection.get(position);
+        return result == null ? false : result;
+    }
+
+    public Set<Integer> getCurrentCheckedPosition() {
+        return mSelection.keySet();
+    }
+
+    public void removeSelection(int position) {
+        mSelection.remove(position);
+        notifyDataSetChanged();
+    }
+
+    public void clearSelection() {
+        mSelection = new HashMap<Integer, Boolean>();
+        notifyDataSetChanged();
+    }
+
+    public void deleteDocuments() {
+
+        Iterator it = mSelection.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            System.out.println(pair.getKey() + " = " + pair.getValue());
+            it.remove(); // avoids a ConcurrentModificationException
+            int position = (Integer) pair.getKey();
+
+            Document doc = (Document) getItem(position);
+            deleteDoc(doc);
+        }
+    }
+
+    public void sendToNodalOfficers(){
+
+        List<String> docIds = new ArrayList<String>();
+        Iterator it = mSelection.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            System.out.println(pair.getKey() + " = " + pair.getValue());
+            it.remove(); // avoids a ConcurrentModificationException
+            int position = (Integer) pair.getKey();
+
+            Document doc = (Document) getItem(position);
+            docIds.add(doc.getId());
+        }
+        send(docIds);
+    }
+
+    private void send(List<String> docIds){
+        Intent intent = new Intent(context, NodalOfficerActivity.class);
+        intent.putExtra(Constants.INTENT_KEY_DOCUMENT, new ArrayList<String>(docIds));
+        context.startActivity(intent);
+    }
+
+    public void publishDocuments() {
+
+        Iterator it = mSelection.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            System.out.println(pair.getKey() + " = " + pair.getValue());
+            it.remove(); // avoids a ConcurrentModificationException
+            int position = (Integer) pair.getKey();
+
+            Document doc = (Document) getItem(position);
+            publishUnPublishDoc(doc);
+        }
+    }
+
+    private void publishUnPublishDoc(final Document doc){
+        final int is_publish = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
+
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(context,
+                R.style.AppCompatAlertDialogStyle);
+        if(is_publish == 1){
+            builder1.setTitle("Document Un-Publish");
+            builder1.setMessage("Are you sure want to un-publish this document?");
+        } else{
+            builder1.setTitle("Document Publish");
+            builder1.setMessage("Are you sure want to publish this document?");
+        }
+
+        builder1.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                int is_delete = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_DELETE);
+
+                if (is_delete == 0) {
+                    if(is_publish == 0) {
+                        //Publis document
+                        try {
+                            // Update the document with more data
+                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                            updatedProperties.putAll(doc.getProperties());
+                            updatedProperties.put(BuildConfigYouthConnect.DOC_IS_PUBLISHED, 1);
+                            doc.putProperties(updatedProperties);
+                        } catch (CouchbaseLiteException e) {
+                            com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
+                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context,
+                                R.style.AppCompatAlertDialogStyle);
+                        builder.setTitle("Publish Document");
+                        builder.setMessage("Done successfully.");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                return;
+                            }
+                        });
+                        builder.show();
+                    } else {
+                        try {
+                            // Update the document with more data
+                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                            updatedProperties.putAll(doc.getProperties());
+                            updatedProperties.put(BuildConfigYouthConnect.DOC_IS_PUBLISHED, 0);
+                            doc.putProperties(updatedProperties);
+                        } catch (CouchbaseLiteException e) {
+                            com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
+                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context,
+                                R.style.AppCompatAlertDialogStyle);
+                        builder.setTitle("Un-Publish Document");
+                        builder.setMessage("Done successfully.");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                return;
+                            }
+                        });
+                        builder.show();
+                    }
+                }
+
+                dialog.dismiss();
+            }
+        });
+        builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder1.show();
+    }
+
+    private void deleteDoc(final Document doc){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context,
+                R.style.AppCompatAlertDialogStyle);
+        builder.setTitle("Document Delete");
+        builder.setMessage("Are you sure want to delete this document?");
+        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                int is_delete = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_DELETE);
+                int is_publish = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
+                if(is_publish == 0 && is_delete == 0) {
+                    try {
+                        // Update the document with more data
+                        Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                        updatedProperties.putAll(doc.getProperties());
+                        updatedProperties.put(BuildConfigYouthConnect.DOC_IS_DELETE, 1);
+                        doc.putProperties(updatedProperties);
+                    } catch (CouchbaseLiteException e) {
+                        com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
+                    }
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context,
+                            R.style.AppCompatAlertDialogStyle);
+                    builder.setTitle("Delete Document");
+                    builder.setMessage("Done successfully.");
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            return;
+                        }
+                    });
+                }
+
+                dialog.dismiss();
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.show();
+    }
+
 
     @Override
     public int getCount() {
@@ -60,43 +276,50 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
     }
 
     @Override
-    public Object getItem(int i) {
-        return super.getItem(i);
-    }
+    public View getView(int position, View convertView, ViewGroup parent) {
 
-    @Override
-    public long getItemId(int i) {
-        return i;
-    }
-
-    @Override
-    public View getView(final int position, View view, ViewGroup viewGroup) {
-
-        if (view == null) {
-            view = LayoutInflater.from(context).inflate(R.layout.showcase_event_list_item, null);
+        if(convertView == null){
+            convertView = LayoutInflater.from(context).inflate(R.layout.list_row, null);
+            convertView.setTag(position);
         }
 
         final Document task = (Document) getItem(position);
-        TextView tvActivityName = (TextView) view.findViewById(R.id.tvActivityName);
-        tvActivityName.setText((String) task.getProperty(BuildConfigYouthConnect.DOC_TITLE));
-        TextView tvActivityPurpose = (TextView) view.findViewById(R.id.tvActivityPurpose);
-        tvActivityPurpose.setText((String) task.getProperty(BuildConfigYouthConnect.DOC_PURPOSE));
 
-        String dateTime = ((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED));
-        try {
-            String _date_time = getTimeToShow(dateTime);
-            TextView tvDate = (TextView) view.findViewById(R.id.tvDate);
-            tvDate.setText(_date_time);
-        } catch(Exception exception){
-            Log.e("ShowcaseFragment", "getTimeToShow()", exception);
+        setData(convertView, task, position);
+
+        convertView.setBackgroundColor(context.getResources()
+                .getColor(android.R.color.background_light)); //default color
+
+        if (mSelection.get(position) != null) {
+            convertView.setBackgroundColor(context.getResources()
+                    .getColor(android.R.color.holo_blue_light));// this is a selected position so make it red
         }
 
-        TextView tvPostedBy = (TextView) view.findViewById(R.id.tvPostedBy);
-        tvPostedBy.setText((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME));
+        return convertView;
+    }
+
+    private void setData(View convertView, Document task, int position){
+        TextView tvQusByUserName = (TextView) convertView.findViewById(R.id.tvQusByUserName);
+        tvQusByUserName.setText((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME));
+
+        TextView tvTime = (TextView) convertView.findViewById(R.id.tvTime);
+        try {
+            tvTime.setText(getTimeToShow((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED)));
+        } catch(Exception exception){
+            Log.e("QAListAdapter", "error()", exception);
+        }
+
+        TextView tvUserNameShortCut = (TextView) convertView.findViewById(R.id.tvUserNameShortCut);
+        String user_name = (String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME);
+        String first_two_characters_of_name = user_name.substring(0, 1).toUpperCase();
+        tvUserNameShortCut.setText(first_two_characters_of_name);
+
+        TextView tvTextTitle = (TextView) convertView.findViewById(R.id.tvFileTitle);
+        tvTextTitle.setText((String) task.getProperty(BuildConfigYouthConnect.DOC_TITLE));
 
         String doc_id = task.getId();
-        RecyclerView item_horizontal_list = (RecyclerView) view.findViewById(R.id.item_horizontal_list);
-        item_horizontal_list.setLayoutManager(new LinearLayoutManager(view.getContext(), LinearLayoutManager.HORIZONTAL, false));
+        RecyclerView item_horizontal_list = (RecyclerView) convertView.findViewById(R.id.item_horizontal_list);
+        item_horizontal_list.setLayoutManager(new LinearLayoutManager(convertView.getContext(), LinearLayoutManager.HORIZONTAL, false));
         HorizontalAdapter horizontalAdapter = new HorizontalAdapter(doc_id);
         item_horizontal_list.setAdapter(horizontalAdapter);
 
@@ -109,42 +332,13 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
             horizontalAdapter.setRowIndex(position);
         }
 
-        return view;
+        RelativeLayout layoutFileList = (RelativeLayout) convertView.findViewById(R.id.layoutFileList);
+        layoutFileList.setTag(position);
     }
 
-    private String getTimeToShow(String time) throws Exception {
-        // 2016-12-23T12:33:23.328Z
-        String currentDate = Util.getCurrentDateTime();
-        if(time != null && time.trim().length() > 0 && time.trim().contains("T")){
-            String[] arr = time.trim().split("T");
-            for(int i = 0; i < arr.length; i++){
-                String date = arr[0];
-                if(date != null &&
-                        date.length() > 0 &&
-                        currentDate != null &&
-                        currentDate.trim().length() > 0 &&
-                        date.trim().equalsIgnoreCase(currentDate.trim())){
-
-                    String t = arr[1];
-                    if(t.contains(":")){
-                        String[] op = t.split(":");
-                        String finalStr = op[0] + ":" + op[1];
-                        return finalStr;
-                    }
-
-                    return "";
-                } else if(date != null &&
-                        date.length() > 0){
-                    String[] crdate = date.split("-");
-                    String mon = crdate[1];
-                    String dd = crdate[2];
-                    String monName = Util.getMonInWord(mon);
-                    String to_return = monName + " " + dd;
-                    return to_return;
-                }
-            }
-        }
-        return null;
+    static class ViewHolder{
+        TextView tvName;
+        TextView tvDescription;
     }
 
     private static class HorizontalAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -210,7 +404,7 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
             String filename = mDataList.get(position);
             filename = filename.trim().replace(" ", "%20");
             File _file = new File(fullPath, filename);
-            if (_file.exists()) {
+             if (_file.exists()) {
                 holder.progressBar.setVisibility(View.INVISIBLE);
                 holder.img.setVisibility(View.VISIBLE);
                 setImage(_file, holder);
@@ -379,8 +573,8 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
                 if (bitmap != null) {
                     viewHolder.img.setImageBitmap(bitmap);
                 } else {
-                    viewHolder.img.setImageResource(R.drawable.ic_file_download);
-                    viewHolder.img.setBackgroundResource(R.color.blue);
+                    viewHolder.img.setImageResource(R.drawable.ic_menu_send);
+                    viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
                 }
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
@@ -424,7 +618,7 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
                     (filePath.contains("3gp")) ||
                     (filePath.contains("avi")))) {
                 viewHolder.img.setImageResource(R.drawable.ic_action_play_over_video);
-                viewHolder.img.setBackgroundResource(R.color.blue);
+                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
                 viewHolder.img.setPadding(12, 12, 12, 12);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
@@ -557,7 +751,8 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
             context.startActivity(appIntent);
         } else{
             if(context != null && context instanceof MainActivity) {
-                AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context, R.style.AppCompatAlertDialogStyle);
+                AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context,
+                        R.style.AppCompatAlertDialogStyle);
                 builder.setTitle(context.getResources().getString(R.string.no_app_found_title));
                 builder.setMessage(context.getResources().getString(R.string.no_app_found_message));
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -569,5 +764,58 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
                 builder.show();
             }
         }
+    }
+
+    private String getTimeToShow(String time) throws Exception {
+        // 2016-12-23T12:33:23.328Z
+        String currentDate = Util.getCurrentDateTime();
+        if(time != null && time.trim().length() > 0 && time.trim().contains("T")){
+            String[] arr = time.trim().split("T");
+            for(int i = 0; i < arr.length; i++){
+                String date = arr[0];
+                if(date != null &&
+                        date.length() > 0 &&
+                        currentDate != null &&
+                        currentDate.trim().length() > 0 &&
+                        date.trim().equalsIgnoreCase(currentDate.trim())){
+
+                    String t = arr[1];
+                    if(t.contains(":")){
+                        String[] op = t.split(":");
+                        String finalStr = op[0] + ":" + op[1];
+                        return finalStr;
+                    }
+
+                    return "";
+                } else if(date != null &&
+                        date.length() > 0){
+                    String[] crdate = date.split("-");
+                    String mon = crdate[1];
+                    String dd = crdate[2];
+                    String monName = Util.getMonInWord(mon);
+                    String to_return = monName + " " + dd;
+                    return to_return;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return super.getItem(position);
+    }
+
+    public interface OnDeleteClickListener{
+        public void onDeleteClick(Document student);
+    }
+
+    public interface OnUpdateClickListenr{
+        public void onUpdateClick(Document student);
     }
 }

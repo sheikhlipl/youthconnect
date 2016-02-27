@@ -8,26 +8,34 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.baoyz.swipemenulistview.SwipeMenu;
-import com.baoyz.swipemenulistview.SwipeMenuCreator;
-import com.baoyz.swipemenulistview.SwipeMenuItem;
-import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.pojo.Answer;
+import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.qa.QaListAdapter;
+import com.luminous.dsys.youthconnect.qa.QaListAdapter1;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -42,12 +50,14 @@ import java.util.Map;
  * Created by luminousinfoways on 18/12/15.
  */
 public class QAPendingActivity extends BaseActivity implements
-        QaListAdapter.OnDeleteClickListener, QaListAdapter.OnUpdateClickListenr,
+        QaListAdapter1.OnDeleteClickListener, QaListAdapter1.OnUpdateClickListenr,
         Replication.ChangeListener{
 
     private static final String TAG = "QAPendingActivity";
-    private SwipeMenuListView mListView = null;
-    private QaListAdapter mAdapter = null;
+    private ListView mListView = null;
+    private QaListAdapter1 mAdapter = null;
+    private Menu menu;
+    private int nr = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,232 +76,7 @@ public class QAPendingActivity extends BaseActivity implements
             });
         }
 
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
-        init();
-        mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
-                        .getInt(Constants.SP_USER_TYPE, 0);
-                final Document qaDoc = (Document) mListView
-                        .getItemAtPosition(position);
-                String title = (String) qaDoc.getProperty(BuildConfigYouthConnect.QA_TITLE);
-                final String description = (String) qaDoc.getProperty(BuildConfigYouthConnect.QA_DESC);
-                switch (index) {
-                    case 0:
-                        // edit.
-
-                        // get prompts.xml view
-                        LayoutInflater li = LayoutInflater.from(QAPendingActivity.this);
-                        View promptsView = li.inflate(R.layout.alert_dialog_with_input_text, null);
-
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-                                QAPendingActivity.this);
-
-                        // set prompts.xml to alertdialog builder
-                        alertDialogBuilder.setView(promptsView);
-
-                        final EditText userInputTitle = (EditText) promptsView
-                                .findViewById(R.id.editTextDialogUserInputQTitle);
-                        final EditText userInputDesc = (EditText) promptsView
-                                .findViewById(R.id.editTextDialogUserInputQDescription);
-                        TextView textView1 = (TextView) promptsView.findViewById(R.id.textView1);
-                        TextView questionDescription = (TextView) promptsView.findViewById(R.id.textViewQuestion);
-                        questionDescription.setText(description);
-
-                        questionDescription.setVisibility(View.GONE);
-                        textView1.setText("Edit this question.");
-                        userInputDesc.setVisibility(View.VISIBLE);
-
-                        // set dialog message
-                        alertDialogBuilder
-                            .setCancelable(false)
-                            .setPositiveButton("OK",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        // get user input and set it to result
-                                        // edit text
-                                        dialog.dismiss();
-
-                                        mInputedStringForEditQuestionTitle = userInputTitle.getText().toString().trim();
-                                        mInputedStringForEditQuestionDescription = userInputDesc.getText().toString().trim();
-
-                                        if (mInputedStringForEditQuestionTitle == null
-                                                || mInputedStringForEditQuestionTitle.trim().length() <= 0) {
-
-                                            AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
-                                                    R.style.AppCompatAlertDialogStyle);
-                                            builder.setTitle("Edit Question");
-                                            builder.setMessage("Provide title for question.");
-                                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    dialog.dismiss();
-                                                    return;
-                                                }
-                                            });
-                                            builder.show();
-                                        } else if (mInputedStringForEditQuestionDescription == null
-                                                || mInputedStringForEditQuestionDescription.trim().length() <= 0) {
-
-                                            AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
-                                                    R.style.AppCompatAlertDialogStyle);
-                                            builder.setTitle("Edit Question");
-                                            builder.setMessage("Provide description for question.");
-                                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    dialog.dismiss();
-                                                    return;
-                                                }
-                                            });
-                                            builder.show();
-                                        } else {
-
-                                            try {
-                                                // Update the document with more data
-                                                Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                                updatedProperties.putAll(qaDoc.getProperties());
-                                                updatedProperties.put(BuildConfigYouthConnect.QA_TITLE, mInputedStringForEditQuestionTitle);
-                                                updatedProperties.put(BuildConfigYouthConnect.QA_DESC, mInputedStringForEditQuestionDescription);
-                                                qaDoc.putProperties(updatedProperties);
-                                            } catch (CouchbaseLiteException e) {
-                                                Log.e(TAG, "Error putting", e);
-                                            }
-                                        }
-                                    }
-                                })
-                            .setNegativeButton("Cancel",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
-
-                            // create alert dialog
-                            AlertDialog alertDialog = alertDialogBuilder.create();
-
-                            // show it
-                            alertDialog.show();
-
-                        break;
-                    case 1:
-                        // delete only admin can do
-                        if(user_type_id == 1){
-                            final Document _qaDoc = (Document) mListView
-                                    .getItemAtPosition(position);
-                            try {
-                                // Update the document with more data
-                                Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                updatedProperties.putAll(_qaDoc.getProperties());
-                                updatedProperties.put(BuildConfigYouthConnect.QA_IS_DELETE, 1);
-                                _qaDoc.putProperties(updatedProperties);
-                            } catch (CouchbaseLiteException e) {
-                                Log.e(TAG, "Error putting", e);
-                            }
-                        }
-                        break;
-                    case 2:
-                        // answer only admin can do
-                        if(user_type_id == 1){
-
-                            // get prompts.xml view
-                            LayoutInflater li1 = LayoutInflater.from(QAPendingActivity.this);
-                            View promptsView1 = li1.inflate(R.layout.alert_dialog_with_input_text, null);
-
-                            AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(
-                                    QAPendingActivity.this);
-
-                            // set prompts.xml to alertdialog builder
-                            alertDialogBuilder1.setView(promptsView1);
-
-                            final EditText userInputTitle1 = (EditText) promptsView1
-                                    .findViewById(R.id.editTextDialogUserInputQTitle);
-                            final EditText userInputDesc1 = (EditText) promptsView1
-                                    .findViewById(R.id.editTextDialogUserInputQDescription);
-                            TextView textView11 = (TextView) promptsView1.findViewById(R.id.textView1);
-                            TextView questionDescription11 = (TextView) promptsView1.findViewById(R.id.textViewQuestion);
-                            questionDescription11.setText(description);
-
-                            questionDescription11.setVisibility(View.VISIBLE);
-                            textView11.setText("Answer this question.");
-                            userInputDesc1.setVisibility(View.GONE);
-
-                            // set dialog message
-                            alertDialogBuilder1
-                                .setCancelable(false)
-                                .setPositiveButton("OK",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
-                                            // get user input and set it to result
-                                            // edit text
-                                            dialog.dismiss();
-
-                                            mInputedStringForAnswer = userInputTitle1.getText().toString().trim();
-
-                                            if (mInputedStringForAnswer == null
-                                                    || mInputedStringForAnswer.trim().length() <= 0) {
-
-                                                AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
-                                                        R.style.AppCompatAlertDialogStyle);
-                                                builder.setTitle("Answer Question");
-                                                builder.setMessage("Answer to this question.");
-                                                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(DialogInterface dialog, int which) {
-                                                        dialog.dismiss();
-                                                        return;
-                                                    }
-                                                });
-                                                builder.show();
-                                            } else {
-
-                                                int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
-                                                        .getInt(Constants.SP_USER_ID, 0);
-                                                String currently_logged_in_user_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
-                                                        .getString(Constants.SP_USER_NAME, "");
-                                                Answer answer = new Answer(Parcel.obtain());
-                                                answer.setAnswer_by_user_id(currently_logged_in_user_id);
-                                                answer.setAnswer_by_user_name(currently_logged_in_user_name);
-                                                answer.setQadmin_description(mInputedStringForAnswer);
-
-                                                List<Answer> answerList = new ArrayList<Answer>();
-                                                answerList.add(answer);
-
-                                                try {
-                                                    // Update the document with more data
-                                                    Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                                    updatedProperties.putAll(qaDoc.getProperties());
-                                                    updatedProperties.put(BuildConfigYouthConnect.QA_ANSWER, answerList);
-                                                    updatedProperties.put(BuildConfigYouthConnect.QA_IS_ANSWERED, 1);
-                                                    qaDoc.putProperties(updatedProperties);
-                                                } catch (CouchbaseLiteException e) {
-                                                    Log.e(TAG, "Error putting", e);
-                                                }
-                                            }
-                                        }
-                                    })
-                                .setNegativeButton("Cancel",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
-                                            dialog.cancel();
-                                        }
-                                    });
-
-                            // create alert dialog
-                            AlertDialog alertDialog1 = alertDialogBuilder1.create();
-
-                            // show it
-                            alertDialog1.show();
-
-                            return false;
-                        }
-                        break;
-                }
-                // false : close the menu; true : not close the menu
-                return false;
-            }
-        });
+        mListView = (ListView) findViewById(R.id.listView);
 
         try {
             showListInListView();
@@ -302,93 +87,6 @@ public class QAPendingActivity extends BaseActivity implements
         } catch(Exception exception){
             Log.e(TAG, "onCreate()", exception);
         }
-    }
-
-    private String mInputedStringForEditQuestionTitle = "";
-    private String mInputedStringForEditQuestionDescription = "";
-    private String mInputedStringForAnswer  = "";
-
-    private void init(){
-
-        final int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_TYPE, 0);
-
-        SwipeMenuCreator creator = new SwipeMenuCreator() {
-
-            @Override
-            public void create(SwipeMenu menu) {
-
-                if(user_type_id == 1){
-                    // create "edit" item
-                    SwipeMenuItem editItem = new SwipeMenuItem(
-                            getApplicationContext());
-                    // set item background
-                    editItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                            0xCE)));
-                    // set item width
-                    editItem.setWidth(Util.dp2px(90, QAPendingActivity.this));
-                    // set item title
-                    editItem.setTitle("Edit");
-                    // set item title fontsize
-                    editItem.setTitleSize(18);
-                    // set item title font color
-                    editItem.setTitleColor(Color.WHITE);
-                    // add to menu
-                    menu.addMenuItem(editItem);
-
-                    // create "delete" item
-                    SwipeMenuItem deleteItem = new SwipeMenuItem(
-                            getApplicationContext());
-                    // set item background
-                    deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                            0x3F, 0x25)));
-                    // set item width
-                    deleteItem.setWidth(Util.dp2px(90, QAPendingActivity.this));
-                    // set a icon
-                    deleteItem.setIcon(R.drawable.ic_delete_white);
-                    // add to menu
-                    menu.addMenuItem(deleteItem);
-
-                    // create "answer" item
-                    SwipeMenuItem answerItem = new SwipeMenuItem(
-                            getApplicationContext());
-                    // set item background
-                    answerItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xCE,
-                            0xC9)));
-                    // set item width
-                    answerItem.setWidth(Util.dp2px(90, QAPendingActivity.this));
-                    // set item title
-                    answerItem.setTitle("Answer");
-                    // set item title fontsize
-                    answerItem.setTitleSize(18);
-                    // set item title font color
-                    answerItem.setTitleColor(Color.WHITE);
-                    // add to menu
-                    menu.addMenuItem(answerItem);
-                } else {
-                    // create "edit" item
-                    SwipeMenuItem openItem = new SwipeMenuItem(
-                            getApplicationContext());
-                    // set item background
-                    openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                            0xCE)));
-                    // set item width
-                    openItem.setWidth(Util.dp2px(90, QAPendingActivity.this));
-                    // set item title
-                    openItem.setTitle("Edit");
-                    // set item title fontsize
-                    openItem.setTitleSize(18);
-                    // set item title font color
-                    openItem.setTitleColor(Color.WHITE);
-                    // add to menu
-                    menu.addMenuItem(openItem);
-                }
-            }
-        };
-
-        // set creator
-        mListView.setMenuCreator(creator);
-        // Left
-        mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
     }
 
     /**
@@ -441,6 +139,11 @@ public class QAPendingActivity extends BaseActivity implements
             } else {
                 AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
             }
+            if (AttachFileActivity.fileToUploads != null) {
+                AttachFileActivity.fileToUploads.clear();
+            } else {
+                AttachFileActivity.fileToUploads = new ArrayList<FileToUpload>();
+            }
             startActivity(intent);
             return true;
         }
@@ -455,7 +158,7 @@ public class QAPendingActivity extends BaseActivity implements
     }
 
     private void showListInListView() throws CouchbaseLiteException, IOException {
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
+        mListView = (ListView) findViewById(R.id.listView);
 
         int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
                 .getInt(Constants.SP_USER_ID, 0);
@@ -463,7 +166,7 @@ public class QAPendingActivity extends BaseActivity implements
         if(currently_logged_in_user_id == 1){
             //User is Admin
             if(application.getQAUnAnsweredForAdminQuery(application.getDatabase()) != null) {
-                mAdapter = new QaListAdapter(this, application.getQAUnAnsweredForAdminQuery
+                mAdapter = new QaListAdapter1(this, application.getQAUnAnsweredForAdminQuery
                         (application.getDatabase()).toLiveQuery(),
                         this, this, false, true, false);
                 mListView.setAdapter(mAdapter);
@@ -471,13 +174,121 @@ public class QAPendingActivity extends BaseActivity implements
         } else{
             //User is nodal Officer
             if(application.getQAUnAnsweredForNodalQuery(application.getDatabase()) != null) {
-                mAdapter = new QaListAdapter(this, application.getQAUnAnsweredForNodalQuery
+                mAdapter = new QaListAdapter1(this, application.getQAUnAnsweredForNodalQuery
                         (application.getDatabase()).toLiveQuery(),
                         this, this, false, true, false);
                 mListView.setAdapter(mAdapter);
             }
         }
+
+        mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+
+        mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                // TODO Auto-generated method stub
+                mAdapter.clearSelection();
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+
+                nr = 0;
+                MenuInflater inflater = getMenuInflater();
+                inflater.inflate(R.menu.contextual_menu_qa_pending, menu);
+                QAPendingActivity.this.menu = menu;
+
+                int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+                if(user_type_id == 2){
+                    menu.getItem(1).setVisible(false);
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                // TODO Auto-generated method stub
+                switch (item.getItemId()) {
+
+                    case R.id.item_delete:
+                        mAdapter.deleteQA();
+                        mode.finish();
+                        break;
+
+                    case R.id.item_edit:
+                        mAdapter.editQuestion();
+                        mode.finish();
+                        break;
+
+                    case R.id.item_answer:
+                        mAdapter.postAnswer();
+                        mode.finish();
+                        break;
+                }
+                return true;
+            }
+
+            @Override
+            public void onItemCheckedStateChanged(ActionMode mode, int position,
+                                                  long id, boolean checked) {
+                // TODO Auto-generated method stub
+                if (checked) {
+                    nr++;
+                    mAdapter.setNewSelection(position, checked);
+                } else {
+                    nr--;
+                    mAdapter.removeSelection(position);
+                }
+                mode.setTitle(nr + " selected");
+                changeAndInflate();
+            }
+        });
+
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+                                           int position, long arg3) {
+                // TODO Auto-generated method stub
+
+                mListView.setItemChecked(position, !mAdapter.isPositionChecked(position));
+                return false;
+            }
+        });
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                View v = mAdapter.getView(position, view, parent);
+                RelativeLayout layoutFileList = (RelativeLayout) v.findViewById(R.id.layoutFileList);
+                if (layoutFileList.getVisibility() == View.VISIBLE) {
+                    layoutFileList.setVisibility(View.GONE);
+                } else {
+                    layoutFileList.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
+
+    private void changeAndInflate(){
+        if(nr > 1) {
+            menu.getItem(0).setVisible(false);
+            menu.getItem(0).setVisible(false);
+        } else{
+            menu.getItem(1).setVisible(true);
+            menu.getItem(1).setVisible(true);
+        }
+    }
+
 
     @Override
     public void onUpdateClick(Document student) {

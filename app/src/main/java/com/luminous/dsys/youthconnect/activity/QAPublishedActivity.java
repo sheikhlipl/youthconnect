@@ -1,27 +1,30 @@
 package com.luminous.dsys.youthconnect.activity;
 
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.view.ActionMode;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 
-import com.baoyz.swipemenulistview.SwipeMenu;
-import com.baoyz.swipemenulistview.SwipeMenuCreator;
-import com.baoyz.swipemenulistview.SwipeMenuItem;
-import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
-import com.luminous.dsys.youthconnect.qa.QaListAdapter;
+import com.luminous.dsys.youthconnect.qa.QaListAdapter1;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
+import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
@@ -31,12 +34,14 @@ import java.util.ArrayList;
  * Created by luminousinfoways on 18/12/15.
  */
 public class QAPublishedActivity extends BaseActivity implements
-        QaListAdapter.OnDeleteClickListener, QaListAdapter.OnUpdateClickListenr,
+        QaListAdapter1.OnDeleteClickListener, QaListAdapter1.OnUpdateClickListenr,
         Replication.ChangeListener{
 
     private static final String TAG = "QAPendingActivity";
-    private SwipeMenuListView mListView = null;
-    private QaListAdapter mAdapter = null;
+    private ListView mListView = null;
+    private QaListAdapter1 mAdapter = null;
+    private Menu menu;
+    private int nr = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,23 +60,12 @@ public class QAPublishedActivity extends BaseActivity implements
             });
         }
 
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
-        init();
-        mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                switch (index) {
-                    case 0:
-                        // open
-                        break;
-                    case 1:
-                        // delete
-                        break;
-                }
-                // false : close the menu; true : not close the menu
-                return false;
-            }
-        });
+        mListView = (ListView) findViewById(R.id.listView);
+        int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
+                .getInt(Constants.SP_USER_TYPE, 0);
+        if(user_type_id == 1) {
+
+        }
 
         try {
             showListInListView();
@@ -82,58 +76,6 @@ public class QAPublishedActivity extends BaseActivity implements
         } catch(Exception exception){
             Log.e(TAG, "onCreate()", exception);
         }
-    }
-
-    private void init(){
-        SwipeMenuCreator creator = new SwipeMenuCreator() {
-
-            @Override
-            public void create(SwipeMenu menu) {
-                // create "open" item
-                SwipeMenuItem openItem = new SwipeMenuItem(
-                        getApplicationContext());
-                // set item background
-                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                        0xCE)));
-                // set item width
-                openItem.setWidth(Util.dp2px(90, QAPublishedActivity.this));
-                // set item title
-                openItem.setTitle("Open");
-                // set item title fontsize
-                openItem.setTitleSize(18);
-                // set item title font color
-                openItem.setTitleColor(Color.WHITE);
-                // add to menu
-                menu.addMenuItem(openItem);
-
-                // create "delete" item
-                SwipeMenuItem deleteItem = new SwipeMenuItem(
-                        getApplicationContext());
-                // set item background
-                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                        0x3F, 0x25)));
-                // set item width
-                deleteItem.setWidth(Util.dp2px(90, QAPublishedActivity.this));
-                // set a icon
-                deleteItem.setIcon(R.drawable.ic_delete_white);
-                // add to menu
-                menu.addMenuItem(deleteItem);
-            }
-        };
-
-        // set creator
-        mListView.setMenuCreator(creator);
-        // Right
-        mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_RIGHT);
-
-        // Left
-        //mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
-
-        // Right
-        mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_RIGHT);
-
-        // Left
-        mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
     }
 
     /**
@@ -186,6 +128,11 @@ public class QAPublishedActivity extends BaseActivity implements
             } else {
                 AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
             }
+            if (AttachFileActivity.fileToUploads != null) {
+                AttachFileActivity.fileToUploads.clear();
+            } else {
+                AttachFileActivity.fileToUploads = new ArrayList<FileToUpload>();
+            }
             startActivity(intent);
             return true;
         }
@@ -200,13 +147,115 @@ public class QAPublishedActivity extends BaseActivity implements
     }
 
     private void showListInListView() throws CouchbaseLiteException, IOException {
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
+        mListView = (ListView) findViewById(R.id.listView);
         if(application.getQAPublishedForQuery(application.getDatabase()) != null) {
-            mAdapter = new QaListAdapter(this, application.getQAPublishedForQuery
+            mAdapter = new QaListAdapter1(this, application.getQAPublishedForQuery
                     (application.getDatabase()).toLiveQuery(),
                     this, this, true, false, false);
             mListView.setAdapter(mAdapter);
         }
+
+        mListView.setAdapter(mAdapter);
+        mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+
+        mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                // TODO Auto-generated method stub
+                mAdapter.clearSelection();
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+
+                nr = 0;
+                MenuInflater inflater = getMenuInflater();
+                inflater.inflate(R.menu.contextual_menu_qa_published, menu);
+                QAPublishedActivity.this.menu = menu;
+
+                int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+                if(user_type_id == 2){
+                    menu.getItem(0).setVisible(false);
+                    menu.getItem(1).setVisible(false);
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                // TODO Auto-generated method stub
+                switch (item.getItemId()) {
+
+                    case R.id.item_delete:
+                        mAdapter.deleteQA();
+                        mode.finish();
+                        break;
+
+                    case R.id.item_publish_unpublish:
+                        mAdapter.unPublishQA();
+                        mode.finish();
+                        break;
+                }
+                return true;
+            }
+
+            @Override
+            public void onItemCheckedStateChanged(ActionMode mode, int position,
+                                                  long id, boolean checked) {
+                // TODO Auto-generated method stub
+                if (checked) {
+                    nr++;
+                    mAdapter.setNewSelection(position, checked);
+                } else {
+                    nr--;
+                    mAdapter.removeSelection(position);
+                }
+                mode.setTitle(nr + " selected");
+                changeAndInflate();
+            }
+        });
+
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+                                           int position, long arg3) {
+                // TODO Auto-generated method stub
+
+                mListView.setItemChecked(position, !mAdapter.isPositionChecked(position));
+                return false;
+            }
+        });
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                View v = mAdapter.getView(position, view, parent);
+                RelativeLayout layoutFileList = (RelativeLayout) v.findViewById(R.id.layoutFileList);
+                if (layoutFileList.getVisibility() == View.VISIBLE) {
+                    layoutFileList.setVisibility(View.GONE);
+                } else {
+                    layoutFileList.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+    }
+
+    private void changeAndInflate(){
+        /*if(nr > 1) {
+            menu.getItem(0).setVisible(false);
+        } else{
+            menu.getItem(0).setVisible(true);
+        }*/
     }
 
     @Override

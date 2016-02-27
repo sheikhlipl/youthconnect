@@ -25,7 +25,8 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView
+        <!--<com.baoyz.swipemenulistview.SwipeMenuListView-->
+        <ListView
             android:id="@+id/listView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

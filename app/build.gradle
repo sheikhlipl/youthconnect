@@ -59,7 +59,7 @@ dependencies {
     compile 'com.android.support:cardview-v7:23.1.1'
 
     //Swipe list item to delete for listview
-    compile 'com.baoyz.swipemenulistview:library:1.3.0'
+    //compile 'com.baoyz.swipemenulistview:library:1.3.0'
     //circle imageview
     compile 'de.hdodenhof:circleimageview:2.0.0'
     // circle reveal effect in attach file screen

@@ -96,7 +96,7 @@ public class ShowcaseFragment extends Fragment implements
             application = ((MainActivity) getActivity()).application;
         }
         try {
-            showListInListView(getView());
+            showListInListView(view);
         } catch (CouchbaseLiteException exception){
             Log.e(TAG, "onCreateView()", exception);
         } catch(IOException exception){

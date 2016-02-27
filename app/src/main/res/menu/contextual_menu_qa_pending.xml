@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/item_edit"
+        android:icon="@drawable/ic_action_edit"
+        app:showAsAction="ifRoom|withText"
+        android:title="Edit"
+        android:titleCondensed="Edit">
+    </item>
+
+    <item
+        android:id="@+id/item_answer"
+        android:icon="@drawable/ic_comment_white"
+        app:showAsAction="ifRoom|withText"
+        android:title="Answer"
+        android:titleCondensed="Answered">
+    </item>
+
+    <item
+        android:id="@+id/item_delete"
+        android:icon="@drawable/ic_delete_white"
+        app:showAsAction="ifRoom|withText"
+        android:title="Delete"
+        android:titleCondensed="Delete">
+    </item>
+
+</menu>
