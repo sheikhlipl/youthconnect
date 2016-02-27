@@ -1,20 +1,18 @@
 package com.luminous.dsys.youthconnect.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.AlertDialog;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 
-import com.baoyz.swipemenulistview.SwipeMenu;
-import com.baoyz.swipemenulistview.SwipeMenuCreator;
-import com.baoyz.swipemenulistview.SwipeMenuItem;
-import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
@@ -22,10 +20,18 @@ import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.qa.QaListAdapter;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
+import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
+import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by luminousinfoways on 18/12/15.
@@ -56,22 +62,130 @@ public class QAPublishedActivity extends BaseActivity implements
         }
 
         mListView = (SwipeMenuListView) findViewById(R.id.listView);
-        init();
-        mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                switch (index) {
-                    case 0:
-                        // open
-                        break;
-                    case 1:
-                        // delete
-                        break;
+        int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
+                .getInt(Constants.SP_USER_TYPE, 0);
+        if(user_type_id == 1) {
+            init();
+            mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                    int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
+                            .getInt(Constants.SP_USER_TYPE, 0);
+                    switch (index) {
+                        case 0:
+                            // un-publish
+                            if (user_type_id == 1) {
+                                final Document _qaDoc = (Document) mListView
+                                        .getItemAtPosition(position);
+
+                                AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
+                                        R.style.AppCompatAlertDialogStyle);
+                                builder.setTitle("Un-Publish Question");
+                                builder.setMessage("Are you sure want to un-publish this question?");
+                                builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+
+                                        try {
+                                            // Update the document with more data
+                                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                                            updatedProperties.putAll(_qaDoc.getProperties());
+                                            updatedProperties.put(BuildConfigYouthConnect.QA_IS_PUBLISHED, 0);
+                                            _qaDoc.putProperties(updatedProperties);
+                                        } catch (CouchbaseLiteException e) {
+                                            Log.e(TAG, "Error putting", e);
+                                        }
+
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
+                                                R.style.AppCompatAlertDialogStyle);
+                                        builder.setTitle("Un-Publish Question");
+                                        builder.setMessage("Done successfully.");
+                                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+
+                                                Intent intent = new Intent(QAPublishedActivity.this, QAAnsweredActivity.class);
+                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                                startActivity(intent);
+                                                finish();
+
+                                                return;
+                                            }
+                                        });
+                                        builder.show();
+
+                                        return;
+                                    }
+                                });
+                                builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        return;
+                                    }
+                                });
+                                builder.show();
+                            }
+                            break;
+                        case 1:
+                            // delete
+                            if (user_type_id == 1) {
+                                final Document _qaDoc = (Document) mListView
+                                        .getItemAtPosition(position);
+
+                                AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
+                                        R.style.AppCompatAlertDialogStyle);
+                                builder.setTitle("Delete Question");
+                                builder.setMessage("Are you sure want to delete this question?");
+                                builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+
+                                        try {
+                                            // Update the document with more data
+                                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                                            updatedProperties.putAll(_qaDoc.getProperties());
+                                            updatedProperties.put(BuildConfigYouthConnect.QA_IS_DELETE, 1);
+                                            _qaDoc.putProperties(updatedProperties);
+                                        } catch (CouchbaseLiteException e) {
+                                            Log.e(TAG, "Error putting", e);
+                                        }
+
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
+                                                R.style.AppCompatAlertDialogStyle);
+                                        builder.setTitle("Delete Question");
+                                        builder.setMessage("Done successfully.");
+                                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                dialog.dismiss();
+                                                return;
+                                            }
+                                        });
+                                        builder.show();
+
+                                        return;
+                                    }
+                                });
+                                builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        return;
+                                    }
+                                });
+                                builder.show();
+                            }
+                            break;
+                    }
+                    // false : close the menu; true : not close the menu
+                    return false;
                 }
-                // false : close the menu; true : not close the menu
-                return false;
-            }
-        });
+            });
+        }
 
         try {
             showListInListView();
@@ -89,22 +203,18 @@ public class QAPublishedActivity extends BaseActivity implements
 
             @Override
             public void create(SwipeMenu menu) {
-                // create "open" item
-                SwipeMenuItem openItem = new SwipeMenuItem(
+                // create "delete" item
+                SwipeMenuItem unpublishItem = new SwipeMenuItem(
                         getApplicationContext());
                 // set item background
-                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                        0xCE)));
+                unpublishItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
                 // set item width
-                openItem.setWidth(Util.dp2px(90, QAPublishedActivity.this));
-                // set item title
-                openItem.setTitle("Open");
-                // set item title fontsize
-                openItem.setTitleSize(18);
-                // set item title font color
-                openItem.setTitleColor(Color.WHITE);
+                unpublishItem.setWidth(Util.dp2px(90, QAPublishedActivity.this));
+                // set a icon
+                unpublishItem.setIcon(R.drawable.ic_not_interested);
                 // add to menu
-                menu.addMenuItem(openItem);
+                menu.addMenuItem(unpublishItem);
 
                 // create "delete" item
                 SwipeMenuItem deleteItem = new SwipeMenuItem(

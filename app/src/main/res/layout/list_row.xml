@@ -80,8 +80,47 @@
                     android:textSize="12sp" />
 
             </RelativeLayout>
+        </RelativeLayout>
 
+        <RelativeLayout
+            android:id="@+id/layoutAnswerAndComment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_below="@+id/layout_above">
 
+            <LinearLayout
+                android:id="@+id/layoutDivider"
+                android:layout_width="match_parent"
+                android:orientation="vertical"
+                android:layout_height="1dp"
+                android:background="@color/light_gray"/>
+
+            <LinearLayout
+                android:id="@+id/layoutAnswerList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:layout_marginBottom="12dp"
+                android:layout_below="@+id/layoutDivider"/>
+
+                <LinearLayout
+                    android:id="@+id/layoutCommentLsit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:layout_below="@+id/layoutAnswerList"
+                    />
+
+            <LinearLayout
+                android:id="@+id/layoutDivider2"
+                android:layout_width="match_parent"
+                android:orientation="vertical"
+                android:layout_height="1dp"
+                android:layout_below="@+id/layoutCommentLsit"
+                android:background="@color/light_gray"/>
 
         </RelativeLayout>
 

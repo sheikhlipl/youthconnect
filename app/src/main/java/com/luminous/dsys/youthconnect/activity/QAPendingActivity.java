@@ -16,10 +16,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.baoyz.swipemenulistview.SwipeMenu;
-import com.baoyz.swipemenulistview.SwipeMenuCreator;
-import com.baoyz.swipemenulistview.SwipeMenuItem;
-import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
@@ -28,6 +24,10 @@ import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.qa.QaListAdapter;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -98,6 +98,8 @@ public class QAPendingActivity extends BaseActivity implements
                         TextView textView1 = (TextView) promptsView.findViewById(R.id.textView1);
                         TextView questionDescription = (TextView) promptsView.findViewById(R.id.textViewQuestion);
                         questionDescription.setText(description);
+                        userInputTitle.setHint("Question Title");
+                        userInputDesc.setHint("Question Description");
 
                         questionDescription.setVisibility(View.GONE);
                         textView1.setText("Edit this question.");
@@ -268,6 +270,24 @@ public class QAPendingActivity extends BaseActivity implements
                                                 } catch (CouchbaseLiteException e) {
                                                     Log.e(TAG, "Error putting", e);
                                                 }
+                                                AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                                        R.style.AppCompatAlertDialogStyle);
+                                                builder.setTitle("Answer to Question");
+                                                builder.setMessage("Done successfully.");
+                                                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.dismiss();
+
+                                                    Intent intent = new Intent(QAPendingActivity.this, QAAnsweredActivity.class);
+                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                                    startActivity(intent);
+                                                    finish();
+
+                                                    return;
+                                                    }
+                                                });
+                                                builder.show();
                                             }
                                         }
                                     })
@@ -381,6 +401,20 @@ public class QAPendingActivity extends BaseActivity implements
                     openItem.setTitleColor(Color.WHITE);
                     // add to menu
                     menu.addMenuItem(openItem);
+
+                    // create "delete" item
+                    SwipeMenuItem deleteItem = new SwipeMenuItem(
+                            getApplicationContext());
+                    // set item background
+                    deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                            0x3F, 0x25)));
+                    // set item width
+                    deleteItem.setWidth(Util.dp2px(90, QAPendingActivity.this));
+                    // set a icon
+                    deleteItem.setIcon(R.drawable.ic_delete_white);
+                    // add to menu
+                    menu.addMenuItem(deleteItem);
+
                 }
             }
         };

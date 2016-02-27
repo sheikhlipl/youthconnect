@@ -1,6 +1,7 @@
 package com.luminous.dsys.youthconnect.home;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -20,6 +21,11 @@ import android.widget.TextView;
 
 import com.couchbase.lite.replicator.Replication;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.activity.Application;
+import com.luminous.dsys.youthconnect.activity.DocListActivity;
+import com.luminous.dsys.youthconnect.activity.MainActivity;
+import com.luminous.dsys.youthconnect.activity.QAAnsweredActivity;
+import com.luminous.dsys.youthconnect.activity.QAPendingActivity;
 import com.luminous.dsys.youthconnect.util.Constants;
 
 /**
@@ -32,7 +38,8 @@ import com.luminous.dsys.youthconnect.util.Constants;
  */
 public class DashboardFragment extends Fragment implements
         AbsListView.OnItemClickListener,
-        SwipeRefreshLayout.OnRefreshListener, View.OnClickListener, Replication.ChangeListener {
+        SwipeRefreshLayout.OnRefreshListener, View.OnClickListener,
+        Replication.ChangeListener {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -95,33 +102,63 @@ public class DashboardFragment extends Fragment implements
         swipeRefreshLayout.setColorSchemeColors(R.array.movie_serial_bg);
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        RelativeLayout layoutQusAnswered = (RelativeLayout) view.findViewById(R.id.layoutQusAnswered);
-        layoutQusAnswered.setOnClickListener(this);
-        RelativeLayout layoutPendingQus = (RelativeLayout) view.findViewById(R.id.layoutPendingQus);
-        layoutPendingQus.setOnClickListener(this);
-        //RelativeLayout layoutPendingFeedback = (RelativeLayout) view.findViewById(R.id.layoutPendingFeedback);
-        //layoutPendingFeedback.setOnClickListener(this);
-        RelativeLayout layoutComment = (RelativeLayout) view.findViewById(R.id.layoutComment);
-        layoutComment.setOnClickListener(this);
-
-        int user_type_id = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_TYPE, 0);
-        if(user_type_id == 1){
-            //layoutPendingFeedback.setVisibility(View.GONE);
-        } else{
-            //layoutPendingFeedback.setVisibility(View.VISIBLE);
+        if(getView() != null){
+            init(getView());
         }
 
-        RelativeLayout docUploadLayout = (RelativeLayout) view.findViewById(R.id.layoutDoc);
-        docUploadLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-            if (getActivity() != null) {
-                //getActivity().startActivity(new Intent(getActivity(), FileActivity.class));
-            }
-            }
-        });
-
         return view;
+    }
+
+    private void init(View view){
+//        Application application = ((MainActivity) getActivity()).application;
+//        int totalAnsweredForCurrentlyLoggedInNodalUser = 0;
+//        if(application.getQAAnsweredForNodalQuery(application.getDatabase()) != null
+//                && application.getQAAnsweredForNodalQuery(application.getDatabase())
+//                .toLiveQuery() != null
+//                && application.getQAAnsweredForNodalQuery(application.getDatabase())
+//                .toLiveQuery().getRows() != null) {
+//            totalAnsweredForCurrentlyLoggedInNodalUser =
+//                    application.getQAAnsweredForNodalQuery(application.getDatabase())
+//                            .toLiveQuery().getRows().getCount();
+//        }
+//        int totalAnsweredForAdmin =
+//                application.getQAAnsweredForAdminQuery(application.getDatabase())
+//                        .toLiveQuery().getRows().getCount();
+//
+//        int totalUnAnsweredForCurrentlyLoggedInNodalUser =
+//                application.getQAUnAnsweredForNodalQuery(application.getDatabase())
+//                        .toLiveQuery().getRows().getCount();
+//        int totalUnAnsweredForAdmin =
+//                application.getQAUnAnsweredForAdminQuery(application.getDatabase())
+//                        .toLiveQuery().getRows().getCount();
+//
+//        int totalPublishedDoc =
+//                application.getPublishedDocQuery(application.getDatabase())
+//                        .toLiveQuery().getRows().getCount();
+//        int totalDoc =
+//                application.getDocForAdminQuery(application.getDatabase())
+//                        .toLiveQuery().getRows().getCount();
+//
+//        int totalDocForCurrentlyLoggedInUser =
+//                application.getDocForNodalQuery(application.getDatabase())
+//                        .toLiveQuery().getRows().getCount();
+//
+//        TextView tvQuestionsAnswered = (TextView) view.findViewById(R.id.tvQuestionsAnswered);
+//        TextView tvPendingQuestions = (TextView) view.findViewById(R.id.tvPendingQuestions);
+//        TextView tvShowcaseEvents = (TextView) view.findViewById(R.id.tvShowcaseEvents);
+//        TextView tvDocuments = (TextView) view.findViewById(R.id.tvDocuments);
+//        int user_type_id = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_ID, 0);
+//        if(user_type_id == 1){
+//            tvPendingQuestions.setText(totalUnAnsweredForAdmin+"");
+//            tvQuestionsAnswered.setText(totalAnsweredForAdmin+"");
+//            tvShowcaseEvents.setText(totalPublishedDoc+"");
+//            tvDocuments.setText(totalDoc+"");
+//        } else{
+//            tvPendingQuestions.setText(totalUnAnsweredForCurrentlyLoggedInNodalUser+"");
+//            tvQuestionsAnswered.setText(totalAnsweredForCurrentlyLoggedInNodalUser+"");
+//            tvShowcaseEvents.setText(totalPublishedDoc+"");
+//            tvDocuments.setText(totalDocForCurrentlyLoggedInUser+"");
+//        }
     }
 
     @Override
@@ -134,22 +171,30 @@ public class DashboardFragment extends Fragment implements
         int id = view.getId();
         FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
         switch (id){
-            case R.id.layoutQusAnswered:
+            case R.id.layoutQAnswered:
                 if(getActivity() != null) {
-                    //Intent intent = new Intent(getActivity(), QAAnsweredActivity.class);
-                    //startActivity(intent);
+                    Intent intent = new Intent(getActivity(), QAAnsweredActivity.class);
+                    startActivity(intent);
                 }
                 break;
-            case R.id.layoutPendingQus:
-                //Intent intent = new Intent(getActivity(), QAPendingActivity.class);
-                //startActivity(intent);
+            case R.id.layoutPendinQA:
+                if(getActivity() != null) {
+                    Intent intent = new Intent(getActivity(), QAPendingActivity.class);
+                    startActivity(intent);
+                }
                 break;
-            case R.id.layoutComment:
+            case R.id.layoutShowcase:
                 ShowcaseFragment fragmentShowcase = ShowcaseFragment.newInstance("", "");
                 ft.addToBackStack(Constants.FRAGMENT_HOME_SHOWCASE_PAGE);
                 ft.commitAllowingStateLoss();
                 ft.attach(fragmentShowcase);
                 ft.commitAllowingStateLoss();
+                break;
+            case R.id.layoutDoc:
+                if(getActivity() != null) {
+                    Intent intent = new Intent(getActivity(), DocListActivity.class);
+                    startActivity(intent);
+                }
                 break;
             default:
                 //TODO
@@ -196,46 +241,8 @@ public class DashboardFragment extends Fragment implements
         }
 
         if(getView() != null){
-            showCounts(getView());
+            init(getView());
         }
-    }
-
-    private void showCounts(View view){
-        TextView tvNodalOfficers = (TextView) view.findViewById(R.id.tvNodalOfficerss);
-        TextView tvAnswereds = (TextView) view.findViewById(R.id.tvAnswereds);
-        TextView tvPendingQus = (TextView) view.findViewById(R.id.tvPendingQus);
-        TextView tvShowcaseEvents = (TextView) view.findViewById(R.id.tvComments);
-        TextView tvDocCounts = (TextView) view.findViewById(R.id.tvDocCounts);
-
-        RelativeLayout layoutQusAnsweredd = (RelativeLayout) view.findViewById(R.id.layoutQusAnsweredd);
-        int user_type_id = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_TYPE, 0);
-        if(user_type_id == 1){
-            tvNodalOfficers.setVisibility(View.VISIBLE);
-            layoutQusAnsweredd.setVisibility(View.VISIBLE);
-        } else{
-            tvNodalOfficers.setVisibility(View.GONE);
-            layoutQusAnsweredd.setVisibility(View.GONE);
-        }
-
-        int nodalOfficersCount = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
-                .getInt(Constants.SP_KEY_COUNT_NODAL_OFFICERS, 0);
-        tvNodalOfficers.setText(nodalOfficersCount+"");
-
-        int pendingQuestionsCount = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
-                .getInt(Constants.SP_KEY_COUNT_PENDING_QUESTIONS, 0);
-        tvPendingQus.setText(pendingQuestionsCount+"");
-
-        int answeredQuestionCount = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
-                .getInt(Constants.SP_KEY_COUNT_QUESTIONS_ANSWERED, 0);
-        tvAnswereds.setText(answeredQuestionCount+"");
-
-        int publishedDocCount = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
-                .getInt(Constants.SP_KEY_COUNT_SHOWCASE_EVENTS, 0);
-        tvShowcaseEvents.setText(publishedDocCount + "");
-
-        int totalDocCounts = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
-                .getInt(Constants.SP_KEY_COUNT_DOCUMENT, 0);
-        tvDocCounts.setText(totalDocCounts+"");
     }
 
     // TODO: Rename method, update argument and hook method into UI event

@@ -17,10 +17,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.baoyz.swipemenulistview.SwipeMenu;
-import com.baoyz.swipemenulistview.SwipeMenuCreator;
-import com.baoyz.swipemenulistview.SwipeMenuItem;
-import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
@@ -35,6 +31,10 @@ import com.luminous.dsys.youthconnect.pojo.Doc;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.qa.QaListAdapter;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
+import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -55,7 +55,7 @@ public class DocListActivity extends BaseActivity implements
         DocumentListAdapter.OnDeleteClickListener, DocumentListAdapter.OnUpdateClickListenr,
         Replication.ChangeListener{
 
-    private ListView mListView = null;
+    private SwipeMenuListView mListView = null;
     private DocumentListAdapter mAdapter = null;
 
     private static final String TAG = "DocListActivity";
@@ -77,11 +77,12 @@ public class DocListActivity extends BaseActivity implements
             });
         }
 
-        mListView = (ListView) findViewById(R.id.listView);
+        mListView = (SwipeMenuListView) findViewById(R.id.listView);
         int current_logged_in_user_id_type = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
                 .getInt(Constants.SP_USER_TYPE, 0);
+        init();
         if(current_logged_in_user_id_type == 1) {
-           /* mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
                     int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
@@ -234,7 +235,7 @@ public class DocListActivity extends BaseActivity implements
                     }
                     return false;
                 }
-            });*/
+            });
         }
 
         try {
@@ -247,6 +248,83 @@ public class DocListActivity extends BaseActivity implements
             com.couchbase.lite.util.Log.e(TAG, "onCreate()", exception);
         }
     }
+
+        private void init(){
+
+            final int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_TYPE, 0);
+
+            SwipeMenuCreator creator = new SwipeMenuCreator() {
+
+                @Override
+                public void create(SwipeMenu menu) {
+
+                    if(user_type_id == 1){
+
+                        // create "delete" item
+                        SwipeMenuItem deleteItem = new SwipeMenuItem(
+                                getApplicationContext());
+                        // set item background
+                        deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                                0x3F, 0x25)));
+                        // set item width
+                        deleteItem.setWidth(Util.dp2px(90, DocListActivity.this));
+                        // set a icon
+                        deleteItem.setIcon(R.drawable.ic_delete_white);
+                        // add to menu
+                        menu.addMenuItem(deleteItem);
+
+                        // create "delete" item
+                        SwipeMenuItem postComment = new SwipeMenuItem(
+                                getApplicationContext());
+                        // set item background
+                        postComment.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                                0x5F, 0x25)));
+                        // set item width
+                        postComment.setWidth(Util.dp2px(90, DocListActivity.this));
+                        // set a icon
+                        postComment.setIcon(R.drawable.ic_comment_white);
+                        // add to menu
+                        menu.addMenuItem(postComment);
+
+                        // create "answer" item
+                        SwipeMenuItem answerItem = new SwipeMenuItem(
+                                getApplicationContext());
+                        // set item background
+                        answerItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xCE,
+                                0xC9)));
+                        // set item width
+                        answerItem.setWidth(Util.dp2px(90, DocListActivity.this));
+                        // set item title
+                        answerItem.setTitle("Publish");
+                        // set item title fontsize
+                        answerItem.setTitleSize(18);
+                        // set item title font color
+                        answerItem.setTitleColor(Color.WHITE);
+                        // add to menu
+                        menu.addMenuItem(answerItem);
+                    } else {
+
+                        // create "delete" item
+                        SwipeMenuItem deleteItem = new SwipeMenuItem(
+                                getApplicationContext());
+                        // set item background
+                        deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                                0x3F, 0x25)));
+                        // set item width
+                        deleteItem.setWidth(Util.dp2px(90, DocListActivity.this));
+                        // set a icon
+                        deleteItem.setIcon(R.drawable.ic_delete_white);
+                        // add to menu
+                        menu.addMenuItem(deleteItem);
+                    }
+                }
+            };
+
+            // set creator
+            mListView.setMenuCreator(creator);
+            // Left
+            mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
+        }
 
     /**
      * When touch on screen outside the keyboard, the input keyboard will hide automatically
@@ -306,7 +384,7 @@ public class DocListActivity extends BaseActivity implements
     }
 
     private void showListInListView() throws CouchbaseLiteException, IOException {
-        mListView = (ListView) findViewById(R.id.listView);
+        mListView = (SwipeMenuListView) findViewById(R.id.listView);
 
         int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
                 .getInt(Constants.SP_USER_ID, 0);
