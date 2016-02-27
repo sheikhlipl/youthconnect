@@ -1,69 +1,57 @@
 package com.luminous.dsys.youthconnect.activity;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.os.Parcel;
 import android.support.v4.app.NavUtils;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
 
 import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
-import com.luminous.dsys.youthconnect.BuildConfig;
 import com.luminous.dsys.youthconnect.R;
-import com.luminous.dsys.youthconnect.document.DocumentListAdapter;
-import com.luminous.dsys.youthconnect.pojo.Answer;
+import com.luminous.dsys.youthconnect.document.DocumentListAdapter1;
 import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
-import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.pojo.Doc;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
-import com.luminous.dsys.youthconnect.qa.QaListAdapter;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Created by luminousinfoways on 18/12/15.
  */
 public class DocListActivity extends BaseActivity implements
-        DocumentListAdapter.OnDeleteClickListener, DocumentListAdapter.OnUpdateClickListenr,
-        Replication.ChangeListener{
+        DocumentListAdapter1.OnDeleteClickListener,
+        DocumentListAdapter1.OnUpdateClickListenr,
+        Replication.ChangeListener {
 
-    private SwipeMenuListView mListView = null;
-    private DocumentListAdapter mAdapter = null;
+    private ListView mListView = null;
+    private DocumentListAdapter1 mAdapter = null;
+    private Menu menu;
+    private int nr = 0;
 
     private static final String TAG = "DocListActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_doc_list);
+        setContentView(R.layout.activity_doc_list1);
 
         if (null != toolbar) {
             toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
@@ -77,166 +65,7 @@ public class DocListActivity extends BaseActivity implements
             });
         }
 
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
-        int current_logged_in_user_id_type = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
-                .getInt(Constants.SP_USER_TYPE, 0);
-        init();
-        if(current_logged_in_user_id_type == 1) {
-            mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                    int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
-                            .getInt(Constants.SP_USER_TYPE, 0);
-                    final Document doc = (Document) mListView
-                            .getItemAtPosition(position);
-                    String title = (String) doc.getProperty(BuildConfigYouthConnect.QA_TITLE);
-                    final String description = (String) doc.getProperty(BuildConfigYouthConnect.QA_DESC);
-                    switch (index) {
-                        case 0:
-                            // Delete
-
-                            AlertDialog.Builder builder = new AlertDialog.Builder(DocListActivity.this,
-                                    R.style.AppCompatAlertDialogStyle);
-                            builder.setTitle("Document Delete");
-                            builder.setMessage("Are you sure want to delete this document?");
-                            builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                    int is_delete = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_DELETE);
-                                    int is_publish = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
-                                    if(is_publish == 0 && is_delete == 0) {
-                                        try {
-                                            // Update the document with more data
-                                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                            updatedProperties.putAll(doc.getProperties());
-                                            updatedProperties.put(BuildConfigYouthConnect.DOC_IS_DELETE, 1);
-                                            doc.putProperties(updatedProperties);
-                                        } catch (CouchbaseLiteException e) {
-                                            com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
-                                        }
-                                        AlertDialog.Builder builder = new AlertDialog.Builder(DocListActivity.this,
-                                                R.style.AppCompatAlertDialogStyle);
-                                        builder.setTitle("Delete Document");
-                                        builder.setMessage("Done successfully.");
-                                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                                return;
-                                            }
-                                        });
-                                    }
-
-                                    dialog.dismiss();
-                                }
-                            });
-                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                            builder.show();
-
-                            break;
-                        case 1:
-                            // Publish / Un publish
-
-                            final int is_publish = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
-
-                            AlertDialog.Builder builder1 = new AlertDialog.Builder(DocListActivity.this,
-                                    R.style.AppCompatAlertDialogStyle);
-                            if(is_publish == 1){
-                                builder1.setTitle("Document Un-Publish");
-                                builder1.setMessage("Are you sure want to un-publish this document?");
-                            } else{
-                                builder1.setTitle("Document Publish");
-                                builder1.setMessage("Are you sure want to publish this document?");
-                            }
-
-                            builder1.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                    int is_delete = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_DELETE);
-
-                                    if (is_delete == 0) {
-                                        if(is_publish == 0) {
-                                            //Publis document
-                                            try {
-                                                // Update the document with more data
-                                                Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                                updatedProperties.putAll(doc.getProperties());
-                                                updatedProperties.put(BuildConfigYouthConnect.DOC_IS_PUBLISHED, 1);
-                                                doc.putProperties(updatedProperties);
-                                            } catch (CouchbaseLiteException e) {
-                                                com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
-                                            }
-                                            AlertDialog.Builder builder = new AlertDialog.Builder(DocListActivity.this,
-                                                    R.style.AppCompatAlertDialogStyle);
-                                            builder.setTitle("Publish Document");
-                                            builder.setMessage("Done successfully.");
-                                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    dialog.dismiss();
-                                                    return;
-                                                }
-                                            });
-                                        } else {
-                                            try {
-                                                // Update the document with more data
-                                                Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                                updatedProperties.putAll(doc.getProperties());
-                                                updatedProperties.put(BuildConfigYouthConnect.DOC_IS_PUBLISHED, 0);
-                                                doc.putProperties(updatedProperties);
-                                            } catch (CouchbaseLiteException e) {
-                                                com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
-                                            }
-                                            AlertDialog.Builder builder = new AlertDialog.Builder(DocListActivity.this,
-                                                    R.style.AppCompatAlertDialogStyle);
-                                            builder.setTitle("Un-Publish Document");
-                                            builder.setMessage("Done successfully.");
-                                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    dialog.dismiss();
-                                                    return;
-                                                }
-                                            });
-                                        }
-                                    }
-
-                                    dialog.dismiss();
-                                }
-                            });
-                            builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                            builder1.show();
-
-                            break;
-                        case 2:
-                            // send to nodal officer
-                            Doc document = getDocFromDocument(doc);
-                            if(document != null) {
-                                Intent intent = new Intent(DocListActivity.this, NodalOfficerActivity.class);
-                                intent.putExtra(Constants.INTENT_KEY_DOCUMENT, document);
-                                startActivity(intent);
-                            } else{
-                                // TODO show alert for not getting doc
-                            }
-
-                            break;
-                    }
-                    return false;
-                }
-            });
-        }
+        mListView = (ListView) findViewById(R.id.listView);
 
         try {
             showListInListView();
@@ -249,82 +78,137 @@ public class DocListActivity extends BaseActivity implements
         }
     }
 
-        private void init(){
+    private void showListInListView() throws CouchbaseLiteException, IOException {
+        mListView = (ListView) findViewById(R.id.listView);
 
-            final int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_TYPE, 0);
+        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
+                .getInt(Constants.SP_USER_ID, 0);
 
-            SwipeMenuCreator creator = new SwipeMenuCreator() {
-
-                @Override
-                public void create(SwipeMenu menu) {
-
-                    if(user_type_id == 1){
-
-                        // create "delete" item
-                        SwipeMenuItem deleteItem = new SwipeMenuItem(
-                                getApplicationContext());
-                        // set item background
-                        deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                                0x3F, 0x25)));
-                        // set item width
-                        deleteItem.setWidth(Util.dp2px(90, DocListActivity.this));
-                        // set a icon
-                        deleteItem.setIcon(R.drawable.ic_delete_white);
-                        // add to menu
-                        menu.addMenuItem(deleteItem);
-
-                        // create "delete" item
-                        SwipeMenuItem postComment = new SwipeMenuItem(
-                                getApplicationContext());
-                        // set item background
-                        postComment.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                                0x5F, 0x25)));
-                        // set item width
-                        postComment.setWidth(Util.dp2px(90, DocListActivity.this));
-                        // set a icon
-                        postComment.setIcon(R.drawable.ic_comment_white);
-                        // add to menu
-                        menu.addMenuItem(postComment);
-
-                        // create "answer" item
-                        SwipeMenuItem answerItem = new SwipeMenuItem(
-                                getApplicationContext());
-                        // set item background
-                        answerItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xCE,
-                                0xC9)));
-                        // set item width
-                        answerItem.setWidth(Util.dp2px(90, DocListActivity.this));
-                        // set item title
-                        answerItem.setTitle("Publish");
-                        // set item title fontsize
-                        answerItem.setTitleSize(18);
-                        // set item title font color
-                        answerItem.setTitleColor(Color.WHITE);
-                        // add to menu
-                        menu.addMenuItem(answerItem);
-                    } else {
-
-                        // create "delete" item
-                        SwipeMenuItem deleteItem = new SwipeMenuItem(
-                                getApplicationContext());
-                        // set item background
-                        deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                                0x3F, 0x25)));
-                        // set item width
-                        deleteItem.setWidth(Util.dp2px(90, DocListActivity.this));
-                        // set a icon
-                        deleteItem.setIcon(R.drawable.ic_delete_white);
-                        // add to menu
-                        menu.addMenuItem(deleteItem);
-                    }
-                }
-            };
-
-            // set creator
-            mListView.setMenuCreator(creator);
-            // Left
-            mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
+        if(currently_logged_in_user_id == 1){
+            //User is Admin
+            if(application.getDocForAdminQuery(application.getDatabase()) != null) {
+                mAdapter = new DocumentListAdapter1(this, application.getDocForAdminQuery
+                        (application.getDatabase()).toLiveQuery(),
+                        this, this);
+                mListView.setAdapter(mAdapter);
+            }
+        } else{
+            //User is nodal Officer
+            if(application.getDocForNodalQuery(application.getDatabase()) != null) {
+                mAdapter = new DocumentListAdapter1(this, application.getDocForNodalQuery
+                        (application.getDatabase()).toLiveQuery(),
+                        this, this);
+                mListView.setAdapter(mAdapter);
+            }
         }
+
+        mListView.setAdapter(mAdapter);
+        mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+
+        mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                // TODO Auto-generated method stub
+                mAdapter.clearSelection();
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+
+                nr = 0;
+                MenuInflater inflater = getMenuInflater();
+                inflater.inflate(R.menu.contextual_menu, menu);
+                DocListActivity.this.menu = menu;
+
+                int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+                if(user_type_id == 2){
+                    menu.getItem(1).setVisible(false);
+                    menu.getItem(2).setVisible(false);
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                // TODO Auto-generated method stub
+                switch (item.getItemId()) {
+
+                    case R.id.item_delete:
+                        mAdapter.deleteDocuments();
+                        mode.finish();
+                        break;
+
+                    case R.id.item_publish_unpublish:
+                        mAdapter.publishDocuments();
+                        mode.finish();
+                        break;
+
+                    case R.id.item_send_to_nodal:
+                        mAdapter.sendToNodalOfficers();
+                        mode.finish();
+                        break;
+                }
+                return true;
+            }
+
+            @Override
+            public void onItemCheckedStateChanged(ActionMode mode, int position,
+                                                  long id, boolean checked) {
+                // TODO Auto-generated method stub
+                if (checked) {
+                    nr++;
+                    mAdapter.setNewSelection(position, checked);
+                } else {
+                    nr--;
+                    mAdapter.removeSelection(position);
+                }
+                mode.setTitle(nr + " selected");
+                changeAndInflate();
+            }
+        });
+
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+                                           int position, long arg3) {
+                // TODO Auto-generated method stub
+
+                mListView.setItemChecked(position, !mAdapter.isPositionChecked(position));
+                return false;
+            }
+        });
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            View v = mAdapter.getView(position, view, parent);
+            RelativeLayout layoutFileList = (RelativeLayout) v.findViewById(R.id.layoutFileList);
+            if(layoutFileList.getVisibility() == View.VISIBLE){
+                layoutFileList.setVisibility(View.GONE);
+            } else{
+                layoutFileList.setVisibility(View.VISIBLE);
+            }
+            }
+        });
+    }
+
+    private void changeAndInflate(){
+        /*if(nr > 1) {
+            menu.getItem(0).setVisible(false);
+        } else{
+            menu.getItem(0).setVisible(true);
+        }*/
+    }
 
     /**
      * When touch on screen outside the keyboard, the input keyboard will hide automatically
@@ -376,36 +260,16 @@ public class DocListActivity extends BaseActivity implements
             } else {
                 AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
             }
+            if (AttachFileActivity.fileToUploads != null) {
+                AttachFileActivity.fileToUploads.clear();
+            } else {
+                AttachFileActivity.fileToUploads = new ArrayList<FileToUpload>();
+            }
             startActivity(intent);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private void showListInListView() throws CouchbaseLiteException, IOException {
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
-
-        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
-                .getInt(Constants.SP_USER_ID, 0);
-
-        if(currently_logged_in_user_id == 1){
-            //User is Admin
-            if(application.getDocForAdminQuery(application.getDatabase()) != null) {
-                mAdapter = new DocumentListAdapter(this, application.getDocForAdminQuery
-                        (application.getDatabase()).toLiveQuery(),
-                        this, this);
-                mListView.setAdapter(mAdapter);
-            }
-        } else{
-            //User is nodal Officer
-            if(application.getDocForNodalQuery(application.getDatabase()) != null) {
-                mAdapter = new DocumentListAdapter(this, application.getDocForNodalQuery
-                        (application.getDatabase()).toLiveQuery(),
-                        this, this);
-                mListView.setAdapter(mAdapter);
-            }
-        }
     }
 
     @Override

@@ -193,7 +193,7 @@ public class DocumentListAdapter extends LiveQueryAdapter {
             String filename = mDataList.get(position);
             filename = filename.trim().replace(" ", "%20");
             File _file = new File(fullPath, filename);
-            if (_file.exists()) {
+             if (_file.exists()) {
                 holder.progressBar.setVisibility(View.INVISIBLE);
                 holder.img.setVisibility(View.VISIBLE);
                 setImage(_file, holder);

@@ -27,6 +27,7 @@ import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.pojo.Doc;
+import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.NodalUser;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +62,7 @@ public class NodalOfficerActivity extends BaseActivity
     private SearchView search;
     protected Handler handler;
 
-    private Doc document = null;
+    private List<String> document = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,7 +150,7 @@ public class NodalOfficerActivity extends BaseActivity
         selectedNodalOfficers = new ArrayList<NodalUser>();
 
         if(getIntent().getExtras() != null){
-            document = (Doc) getIntent().getExtras().getSerializable(Constants.INTENT_KEY_DOCUMENT);
+            document = (ArrayList<String>) getIntent().getExtras().getStringArrayList(Constants.INTENT_KEY_DOCUMENT);
         }
     }
 
@@ -293,57 +295,60 @@ public class NodalOfficerActivity extends BaseActivity
     }
 
     private void sendDocumnetToNodalOfficers(){
-        if(selectedNodalOfficers != null && selectedNodalOfficers.size() > 0){
-            List<AssignedToUSer> assignedToUSers = document.getDoc_assigned_to_user_ids();
-            if(assignedToUSers == null){
-                assignedToUSers = new ArrayList<AssignedToUSer>();
-            }
-            for(int i = 0; i < selectedNodalOfficers.size(); i++){
-                NodalUser user = selectedNodalOfficers.get(i);
-                String user_name = user.getFull_name();
-                int user_id = user.getUser_id();
+        if(selectedNodalOfficers != null && selectedNodalOfficers.size() > 0) {
+            for (int j = 0; j < document.size(); j++) {
+                Document retrievedDocument = application.getDatabase().getDocument(document.get(j));
+                String doc_id = retrievedDocument.getId();
+                Document document = application.getDatabase().getDocument(doc_id);
+                Doc doc = getDocFromDocument(document);
+                List<AssignedToUSer> assignedToUSers = doc.getDoc_assigned_to_user_ids();
+                if (assignedToUSers == null) {
+                    assignedToUSers = new ArrayList<AssignedToUSer>();
+                }
+                for (int i = 0; i < selectedNodalOfficers.size(); i++) {
+                    NodalUser user = selectedNodalOfficers.get(i);
+                    String user_name = user.getFull_name();
+                    int user_id = user.getUser_id();
 
-                AssignedToUSer assignedToUSer = new AssignedToUSer();
-                assignedToUSer.setUser_name(user_name);
-                assignedToUSer.setUser_id(user_id);
+                    AssignedToUSer assignedToUSer = new AssignedToUSer();
+                    assignedToUSer.setUser_name(user_name);
+                    assignedToUSer.setUser_id(user_id);
 
-                assignedToUSers.add(assignedToUSer);
-            }
+                    assignedToUSers.add(assignedToUSer);
+                }
 
-            if(document != null){
-                String doc_id = document.getDoc_id();
-                try {
-
-                    Document document = application.getDatabase().getDocument(doc_id);
+                if (retrievedDocument != null) {
                     try {
-                        // Update the document with more data
 
-                        Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                        updatedProperties.putAll(document.getProperties());
-                        updatedProperties.put(BuildConfigYouthConnect.DOC_ASSIGNED_TO_USER_IDS, assignedToUSers);
-                        // Save to the Couchbase local Couchbase Lite DB
-                        document.putProperties(updatedProperties);
-                    } catch (CouchbaseLiteException e) {
-                        com.couchbase.lite.util.Log.e("DocUtil", "Error putting", e);
-                    } catch(Exception exception){
-                        Log.e("DocUtil", "updateDocument()", exception);
-                    }
+                        try {
+                            // Update the document with more data
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
-                    builder.setTitle("Doc assignment");
-                    builder.setMessage("Done.");
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            finish();
+                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                            updatedProperties.putAll(document.getProperties());
+                            updatedProperties.put(BuildConfigYouthConnect.DOC_ASSIGNED_TO_USER_IDS, assignedToUSers);
+                            // Save to the Couchbase local Couchbase Lite DB
+                            document.putProperties(updatedProperties);
+                        } catch (CouchbaseLiteException e) {
+                            com.couchbase.lite.util.Log.e("DocUtil", "Error putting", e);
+                        } catch (Exception exception) {
+                            Log.e("DocUtil", "updateDocument()", exception);
                         }
-                    });
-                    builder.show();
-                } catch(Exception exception){
-                    Log.e(TAG, "OnClick()", exception);
+                    } catch (Exception exception) {
+                        Log.e(TAG, "OnClick()", exception);
+                    }
                 }
             }
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+            builder.setTitle("Doc assignment");
+            builder.setMessage("Done.");
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    finish();
+                }
+            });
+            builder.show();
         }
     }
 
@@ -351,5 +356,78 @@ public class NodalOfficerActivity extends BaseActivity
     protected void onDestroy() {
         System.gc();
         super.onDestroy();
+    }
+
+    public static Doc getDocFromDocument(Document document){
+
+        try {
+
+            String doc_id = document.getId();
+
+            String title = (String) document.getProperty(BuildConfigYouthConnect.DOC_TITLE);
+            String docPurpose = (String) document.getProperty(BuildConfigYouthConnect.DOC_PURPOSE);
+            String updated_time_stamp = (String) document.getProperty(BuildConfigYouthConnect.DOC_CREATED);
+
+            Long timeStamp = Long.parseLong(updated_time_stamp);
+            String postDate = Util.getDateAndTimeFromTimeStamp(timeStamp);
+            String user_name = (String) document.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME);
+            int created_by_user_id = (Integer) document.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_ID);
+            int is_uploaded = (Integer) document.getProperty(BuildConfigYouthConnect.DOC_IS_UPLOADED);
+            int is_published = (Integer) document.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
+
+            ArrayList<String> fileList = (ArrayList<String>) document.getProperty(BuildConfigYouthConnect.DOC_FILES);
+            ArrayList<LinkedHashMap<String, Object>> assigned_user_ids = (ArrayList<LinkedHashMap<String, Object>>)
+                    document.getProperty(BuildConfigYouthConnect.DOC_ASSIGNED_TO_USER_IDS);
+
+            ArrayList<FileToUpload> files = new ArrayList<FileToUpload>();
+            if(fileList != null && fileList.size() > 0){
+                for(int i = 0; i <fileList.size(); i++){
+                    String file_name =  fileList.get(i);
+                    if (file_name != null){
+
+                        /*
+                        * url to download file :
+                        * http://192.168.1.107:4984/youth_connect/{doc_id}/{file_name}
+                        * */
+                        String download_link = BuildConfigYouthConnect.SYNC_URL_HTTP  + "/" + doc_id + "/" + file_name;
+                        FileToUpload fileToUpload = new FileToUpload();
+                        fileToUpload.setDownload_link_url(download_link);
+                        fileToUpload.setFile_name(file_name);
+                        files.add(fileToUpload);
+                    }
+                }
+            }
+
+            ArrayList<AssignedToUSer> ausers = new ArrayList<AssignedToUSer>();
+            if(assigned_user_ids != null && assigned_user_ids.size() > 0){
+                for(int i = 0; i <assigned_user_ids.size(); i++){
+                    LinkedHashMap<String, Object> users = (LinkedHashMap<String, Object>) (assigned_user_ids.get(i));
+                    if((users.get("user_name") != null)
+                            && (users.get("user_id") != null)){
+                        AssignedToUSer answer = new AssignedToUSer();
+                        answer.setUser_name((String)users.get("user_name"));
+                        answer.setUser_id((Integer)users.get("user_id"));
+                        ausers.add(answer);
+                    }
+                }
+            }
+
+            Doc doc = new Doc();
+            doc.setDoc_id(doc_id);
+            doc.setDoc_title(title);
+            doc.setCreated(postDate);
+            doc.setDoc_purpose(docPurpose);
+            doc.setIs_published(is_published);
+            doc.setCreated_by_user_name(user_name);
+            doc.setCreated_by_user_id(created_by_user_id);
+            doc.setIs_uploaded(is_uploaded);
+            doc.setFileToUploads(files);
+            doc.setDoc_assigned_to_user_ids(ausers);
+
+            return doc;
+        } catch(Exception exception){
+            Log.e("QAUtil", "getQAFromDocument()", exception);
+        }
+        return null;
     }
 }

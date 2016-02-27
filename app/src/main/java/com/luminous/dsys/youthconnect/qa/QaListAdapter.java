@@ -62,7 +62,7 @@ public class QaListAdapter extends LiveQueryAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         if(convertView == null){
-            convertView = LayoutInflater.from(context).inflate(R.layout.list_row, null);
+            convertView = LayoutInflater.from(context).inflate(R.layout.list_row_bk, null);
             convertView.setTag(position);
         }
 

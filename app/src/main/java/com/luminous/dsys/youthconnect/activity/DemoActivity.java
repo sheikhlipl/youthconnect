@@ -1,5 +1,6 @@
 package com.luminous.dsys.youthconnect.activity;
 
+import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Context;
 import android.os.Bundle;
@@ -22,25 +23,27 @@ import java.util.Set;
 /**
  * Created by Android Luminous on 2/27/2016.
  */
-public class DemoActivity extends ListActivity {
+public class DemoActivity extends Activity {
 
     private String[] data = {"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine","Ten"};
 
     private SelectionAdapter mAdapter;
+    private Menu menu;
+    private int nr = 0;
+    private ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_demo);
 
+        listView = (ListView) findViewById(R.id.listView);
         mAdapter = new SelectionAdapter(this,
                 R.layout.row_list_item, R.id.textView1, data);
-        setListAdapter(mAdapter);
-        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setAdapter(mAdapter);
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 
-        getListView().setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
-
-            private int nr = 0;
+        listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
 
             @Override
             public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -61,6 +64,8 @@ public class DemoActivity extends ListActivity {
                 nr = 0;
                 MenuInflater inflater = getMenuInflater();
                 inflater.inflate(R.menu.contextual_menu, menu);
+                DemoActivity.this.menu = menu;
+
                 return true;
             }
 
@@ -90,21 +95,30 @@ public class DemoActivity extends ListActivity {
                     mAdapter.removeSelection(position);
                 }
                 mode.setTitle(nr + " selected");
+                changeAndInflate();
 
             }
         });
 
-        getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 
             @Override
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
                                            int position, long arg3) {
                 // TODO Auto-generated method stub
 
-                getListView().setItemChecked(position, !mAdapter.isPositionChecked(position));
+                listView.setItemChecked(position, !mAdapter.isPositionChecked(position));
                 return false;
             }
         });
+    }
+
+    private void changeAndInflate(){
+        if(nr > 1) {
+            menu.getItem(0).setVisible(false);
+        } else{
+            menu.getItem(0).setVisible(true);
+        }
     }
 
     private class SelectionAdapter extends ArrayAdapter<String> {

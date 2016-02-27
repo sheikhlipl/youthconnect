@@ -26,6 +26,7 @@ import com.luminous.dsys.youthconnect.database.DBHelper;
 import com.luminous.dsys.youthconnect.home.DashboardFragment;
 import com.luminous.dsys.youthconnect.home.HomeRecyclerAdapter;
 import com.luminous.dsys.youthconnect.login.LoginActivity;
+import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -154,6 +155,11 @@ public class MainActivity extends BaseActivity
                 AttachFileActivity.fileUploadList.clear();
             } else {
                 AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
+            }
+            if (AttachFileActivity.fileToUploads != null) {
+                AttachFileActivity.fileToUploads.clear();
+            } else {
+                AttachFileActivity.fileToUploads = new ArrayList<FileToUpload>();
             }
             startActivity(intent);
             return true;

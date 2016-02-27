@@ -1,48 +1,47 @@
 package com.luminous.dsys.youthconnect.activity;
 
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.support.v7.app.AlertDialog;
+import android.view.ActionMode;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
-import com.luminous.dsys.youthconnect.qa.QaListAdapter;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
+import com.luminous.dsys.youthconnect.qa.QaListAdapter1;
 import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
-import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by luminousinfoways on 18/12/15.
  */
 public class QAPublishedActivity extends BaseActivity implements
-        QaListAdapter.OnDeleteClickListener, QaListAdapter.OnUpdateClickListenr,
+        QaListAdapter1.OnDeleteClickListener, QaListAdapter1.OnUpdateClickListenr,
         Replication.ChangeListener{
 
     private static final String TAG = "QAPendingActivity";
-    private SwipeMenuListView mListView = null;
-    private QaListAdapter mAdapter = null;
+    private ListView mListView = null;
+    private QaListAdapter1 mAdapter = null;
+    private Menu menu;
+    private int nr = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,130 +60,11 @@ public class QAPublishedActivity extends BaseActivity implements
             });
         }
 
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
+        mListView = (ListView) findViewById(R.id.listView);
         int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
                 .getInt(Constants.SP_USER_TYPE, 0);
         if(user_type_id == 1) {
-            init();
-            mListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                    int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
-                            .getInt(Constants.SP_USER_TYPE, 0);
-                    switch (index) {
-                        case 0:
-                            // un-publish
-                            if (user_type_id == 1) {
-                                final Document _qaDoc = (Document) mListView
-                                        .getItemAtPosition(position);
 
-                                AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
-                                        R.style.AppCompatAlertDialogStyle);
-                                builder.setTitle("Un-Publish Question");
-                                builder.setMessage("Are you sure want to un-publish this question?");
-                                builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-
-                                        try {
-                                            // Update the document with more data
-                                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                            updatedProperties.putAll(_qaDoc.getProperties());
-                                            updatedProperties.put(BuildConfigYouthConnect.QA_IS_PUBLISHED, 0);
-                                            _qaDoc.putProperties(updatedProperties);
-                                        } catch (CouchbaseLiteException e) {
-                                            Log.e(TAG, "Error putting", e);
-                                        }
-
-                                        AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
-                                                R.style.AppCompatAlertDialogStyle);
-                                        builder.setTitle("Un-Publish Question");
-                                        builder.setMessage("Done successfully.");
-                                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-
-                                                Intent intent = new Intent(QAPublishedActivity.this, QAAnsweredActivity.class);
-                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                                startActivity(intent);
-                                                finish();
-
-                                                return;
-                                            }
-                                        });
-                                        builder.show();
-
-                                        return;
-                                    }
-                                });
-                                builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                        return;
-                                    }
-                                });
-                                builder.show();
-                            }
-                            break;
-                        case 1:
-                            // delete
-                            if (user_type_id == 1) {
-                                final Document _qaDoc = (Document) mListView
-                                        .getItemAtPosition(position);
-
-                                AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
-                                        R.style.AppCompatAlertDialogStyle);
-                                builder.setTitle("Delete Question");
-                                builder.setMessage("Are you sure want to delete this question?");
-                                builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-
-                                        try {
-                                            // Update the document with more data
-                                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
-                                            updatedProperties.putAll(_qaDoc.getProperties());
-                                            updatedProperties.put(BuildConfigYouthConnect.QA_IS_DELETE, 1);
-                                            _qaDoc.putProperties(updatedProperties);
-                                        } catch (CouchbaseLiteException e) {
-                                            Log.e(TAG, "Error putting", e);
-                                        }
-
-                                        AlertDialog.Builder builder = new AlertDialog.Builder(QAPublishedActivity.this,
-                                                R.style.AppCompatAlertDialogStyle);
-                                        builder.setTitle("Delete Question");
-                                        builder.setMessage("Done successfully.");
-                                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                dialog.dismiss();
-                                                return;
-                                            }
-                                        });
-                                        builder.show();
-
-                                        return;
-                                    }
-                                });
-                                builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                        return;
-                                    }
-                                });
-                                builder.show();
-                            }
-                            break;
-                    }
-                    // false : close the menu; true : not close the menu
-                    return false;
-                }
-            });
         }
 
         try {
@@ -196,54 +76,6 @@ public class QAPublishedActivity extends BaseActivity implements
         } catch(Exception exception){
             Log.e(TAG, "onCreate()", exception);
         }
-    }
-
-    private void init(){
-        SwipeMenuCreator creator = new SwipeMenuCreator() {
-
-            @Override
-            public void create(SwipeMenu menu) {
-                // create "delete" item
-                SwipeMenuItem unpublishItem = new SwipeMenuItem(
-                        getApplicationContext());
-                // set item background
-                unpublishItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                        0x3F, 0x25)));
-                // set item width
-                unpublishItem.setWidth(Util.dp2px(90, QAPublishedActivity.this));
-                // set a icon
-                unpublishItem.setIcon(R.drawable.ic_not_interested);
-                // add to menu
-                menu.addMenuItem(unpublishItem);
-
-                // create "delete" item
-                SwipeMenuItem deleteItem = new SwipeMenuItem(
-                        getApplicationContext());
-                // set item background
-                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
-                        0x3F, 0x25)));
-                // set item width
-                deleteItem.setWidth(Util.dp2px(90, QAPublishedActivity.this));
-                // set a icon
-                deleteItem.setIcon(R.drawable.ic_delete_white);
-                // add to menu
-                menu.addMenuItem(deleteItem);
-            }
-        };
-
-        // set creator
-        mListView.setMenuCreator(creator);
-        // Right
-        mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_RIGHT);
-
-        // Left
-        //mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
-
-        // Right
-        mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_RIGHT);
-
-        // Left
-        mListView.setSwipeDirection(SwipeMenuListView.DIRECTION_LEFT);
     }
 
     /**
@@ -296,6 +128,11 @@ public class QAPublishedActivity extends BaseActivity implements
             } else {
                 AttachFileActivity.fileUploadList = new ArrayList<PendingFileToUpload>();
             }
+            if (AttachFileActivity.fileToUploads != null) {
+                AttachFileActivity.fileToUploads.clear();
+            } else {
+                AttachFileActivity.fileToUploads = new ArrayList<FileToUpload>();
+            }
             startActivity(intent);
             return true;
         }
@@ -310,13 +147,115 @@ public class QAPublishedActivity extends BaseActivity implements
     }
 
     private void showListInListView() throws CouchbaseLiteException, IOException {
-        mListView = (SwipeMenuListView) findViewById(R.id.listView);
+        mListView = (ListView) findViewById(R.id.listView);
         if(application.getQAPublishedForQuery(application.getDatabase()) != null) {
-            mAdapter = new QaListAdapter(this, application.getQAPublishedForQuery
+            mAdapter = new QaListAdapter1(this, application.getQAPublishedForQuery
                     (application.getDatabase()).toLiveQuery(),
                     this, this, true, false, false);
             mListView.setAdapter(mAdapter);
         }
+
+        mListView.setAdapter(mAdapter);
+        mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+
+        mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                // TODO Auto-generated method stub
+                mAdapter.clearSelection();
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                // TODO Auto-generated method stub
+
+                nr = 0;
+                MenuInflater inflater = getMenuInflater();
+                inflater.inflate(R.menu.contextual_menu_qa_published, menu);
+                QAPublishedActivity.this.menu = menu;
+
+                int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+                if(user_type_id == 2){
+                    menu.getItem(0).setVisible(false);
+                    menu.getItem(1).setVisible(false);
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                // TODO Auto-generated method stub
+                switch (item.getItemId()) {
+
+                    case R.id.item_delete:
+                        mAdapter.deleteQA();
+                        mode.finish();
+                        break;
+
+                    case R.id.item_publish_unpublish:
+                        mAdapter.unPublishQA();
+                        mode.finish();
+                        break;
+                }
+                return true;
+            }
+
+            @Override
+            public void onItemCheckedStateChanged(ActionMode mode, int position,
+                                                  long id, boolean checked) {
+                // TODO Auto-generated method stub
+                if (checked) {
+                    nr++;
+                    mAdapter.setNewSelection(position, checked);
+                } else {
+                    nr--;
+                    mAdapter.removeSelection(position);
+                }
+                mode.setTitle(nr + " selected");
+                changeAndInflate();
+            }
+        });
+
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+                                           int position, long arg3) {
+                // TODO Auto-generated method stub
+
+                mListView.setItemChecked(position, !mAdapter.isPositionChecked(position));
+                return false;
+            }
+        });
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                View v = mAdapter.getView(position, view, parent);
+                RelativeLayout layoutFileList = (RelativeLayout) v.findViewById(R.id.layoutFileList);
+                if (layoutFileList.getVisibility() == View.VISIBLE) {
+                    layoutFileList.setVisibility(View.GONE);
+                } else {
+                    layoutFileList.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+    }
+
+    private void changeAndInflate(){
+        /*if(nr > 1) {
+            menu.getItem(0).setVisible(false);
+        } else{
+            menu.getItem(0).setVisible(true);
+        }*/
     }
 
     @Override

@@ -4,26 +4,26 @@
 
     <item
         android:id="@+id/item_delete"
-        android:icon="@android:drawable/ic_menu_delete"
+        android:icon="@drawable/ic_delete_white"
         app:showAsAction="ifRoom|withText"
         android:title="Delete"
         android:titleCondensed="Delete">
     </item>
 
     <item
-        android:id="@+id/item_publish_unpublish"
-        android:icon="@android:drawable/ic_menu_upload"
+        android:id="@+id/item_comment"
+        android:icon="@drawable/ic_comment_white"
         app:showAsAction="ifRoom|withText"
         android:title="Publish/Un-publish"
         android:titleCondensed="Publish/Un-publish">
     </item>
 
     <item
-        android:id="@+id/item_send_to_nodal"
-        android:icon="@android:drawable/ic_menu_send"
+        android:id="@+id/item_publish_unpublish"
+        android:icon="@drawable/ic_publish_white"
         app:showAsAction="ifRoom|withText"
-        android:title="Send To Nodal"
-        android:titleCondensed="Send To Nodal">
+        android:title="Publish/Un-publish"
+        android:titleCondensed="Publish/Un-publish">
     </item>
 
 </menu>
