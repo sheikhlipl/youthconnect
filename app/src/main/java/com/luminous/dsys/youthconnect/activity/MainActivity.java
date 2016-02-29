@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
+import com.crashlytics.android.Crashlytics;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.database.DBHelper;
 import com.luminous.dsys.youthconnect.home.DashboardFragment;
@@ -28,6 +29,7 @@ import com.luminous.dsys.youthconnect.home.HomeRecyclerAdapter;
 import com.luminous.dsys.youthconnect.login.LoginActivity;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
+import com.luminous.dsys.youthconnect.pojo.User;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
@@ -67,7 +69,16 @@ public class MainActivity extends BaseActivity
         tvUserFullName.setText(user_full_name);
         tvUserEmail.setText(user_email);
 
+        logUser(user_full_name);
         initViewPagerSetUp();
+    }
+
+    private void logUser(String user_name) {
+        // TODO: Use the current user's information
+        // You can call any combination of these three methods
+        if(user_name != null && user_name.length() > 0) {
+            Crashlytics.setUserName(user_name);
+        }
     }
 
     @Override
