@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -16,9 +17,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TabHost;
 import android.widget.TextView;
 
+import com.couchbase.lite.LiveQuery;
+import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.Application;
@@ -26,6 +31,7 @@ import com.luminous.dsys.youthconnect.activity.DocListActivity;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
 import com.luminous.dsys.youthconnect.activity.QAAnsweredActivity;
 import com.luminous.dsys.youthconnect.activity.QAPendingActivity;
+import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
 import com.luminous.dsys.youthconnect.util.Constants;
 
 /**
@@ -59,8 +65,6 @@ public class DashboardFragment extends Fragment implements
     protected String[] mXValuesFeedback = new String[] {
             "Pending", "Submitted"
     };
-
-    private SwipeRefreshLayout swipeRefreshLayout;
 
     /**
      * Use this factory method to create a new instance of
@@ -98,67 +102,195 @@ public class DashboardFragment extends Fragment implements
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         final View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
-        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setColorSchemeColors(R.array.movie_serial_bg);
-        swipeRefreshLayout.setOnRefreshListener(this);
 
         if(getView() != null){
             init(getView());
         }
 
+        LinearLayout layoutQAnswered = (LinearLayout) view.findViewById(R.id.layoutQAnswered);
+        layoutQAnswered.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), QAAnsweredActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        LinearLayout layoutPendinQA = (LinearLayout) view.findViewById(R.id.layoutPendinQA);
+        layoutPendinQA.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), QAPendingActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        LinearLayout layoutShowcase = (LinearLayout) view.findViewById(R.id.layoutShowcase);
+        layoutShowcase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(getActivity() != null) {
+                    TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tabView);
+                    TabLayout.Tab tab = tabLayout.getTabAt(1);
+                    tab.select();
+                }
+            }
+        });
+
+        LinearLayout layoutDoc = (LinearLayout) view.findViewById(R.id.layoutDoc);
+        layoutDoc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), DocListActivity.class);
+                startActivity(intent);
+            }
+        });
+
         return view;
     }
 
     private void init(View view){
-//        Application application = ((MainActivity) getActivity()).application;
-//        int totalAnsweredForCurrentlyLoggedInNodalUser = 0;
-//        if(application.getQAAnsweredForNodalQuery(application.getDatabase()) != null
-//                && application.getQAAnsweredForNodalQuery(application.getDatabase())
-//                .toLiveQuery() != null
-//                && application.getQAAnsweredForNodalQuery(application.getDatabase())
-//                .toLiveQuery().getRows() != null) {
-//            totalAnsweredForCurrentlyLoggedInNodalUser =
-//                    application.getQAAnsweredForNodalQuery(application.getDatabase())
-//                            .toLiveQuery().getRows().getCount();
-//        }
-//        int totalAnsweredForAdmin =
-//                application.getQAAnsweredForAdminQuery(application.getDatabase())
-//                        .toLiveQuery().getRows().getCount();
-//
-//        int totalUnAnsweredForCurrentlyLoggedInNodalUser =
-//                application.getQAUnAnsweredForNodalQuery(application.getDatabase())
-//                        .toLiveQuery().getRows().getCount();
-//        int totalUnAnsweredForAdmin =
-//                application.getQAUnAnsweredForAdminQuery(application.getDatabase())
-//                        .toLiveQuery().getRows().getCount();
-//
-//        int totalPublishedDoc =
-//                application.getPublishedDocQuery(application.getDatabase())
-//                        .toLiveQuery().getRows().getCount();
-//        int totalDoc =
-//                application.getDocForAdminQuery(application.getDatabase())
-//                        .toLiveQuery().getRows().getCount();
-//
-//        int totalDocForCurrentlyLoggedInUser =
-//                application.getDocForNodalQuery(application.getDatabase())
-//                        .toLiveQuery().getRows().getCount();
-//
-//        TextView tvQuestionsAnswered = (TextView) view.findViewById(R.id.tvQuestionsAnswered);
-//        TextView tvPendingQuestions = (TextView) view.findViewById(R.id.tvPendingQuestions);
-//        TextView tvShowcaseEvents = (TextView) view.findViewById(R.id.tvShowcaseEvents);
-//        TextView tvDocuments = (TextView) view.findViewById(R.id.tvDocuments);
-//        int user_type_id = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_ID, 0);
-//        if(user_type_id == 1){
-//            tvPendingQuestions.setText(totalUnAnsweredForAdmin+"");
-//            tvQuestionsAnswered.setText(totalAnsweredForAdmin+"");
-//            tvShowcaseEvents.setText(totalPublishedDoc+"");
-//            tvDocuments.setText(totalDoc+"");
-//        } else{
-//            tvPendingQuestions.setText(totalUnAnsweredForCurrentlyLoggedInNodalUser+"");
-//            tvQuestionsAnswered.setText(totalAnsweredForCurrentlyLoggedInNodalUser+"");
-//            tvShowcaseEvents.setText(totalPublishedDoc+"");
-//            tvDocuments.setText(totalDocForCurrentlyLoggedInUser+"");
-//        }
+        Application application = ((MainActivity) getActivity()).application;
+
+        final TextView tvQuestionsAnswered = (TextView) view.findViewById(R.id.tvQuestionsAnswered);
+        final TextView tvPendingQuestions = (TextView) view.findViewById(R.id.tvPendingQuestions);
+        final TextView tvShowcaseEvents = (TextView) view.findViewById(R.id.tvShowcaseEvents);
+        final TextView tvDocuments = (TextView) view.findViewById(R.id.tvDocuments);
+        int user_type_id = getActivity().getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_ID, 0);
+        if(user_type_id == 1){
+            LiveQuery liveQuery1 = application.getQAAnsweredForAdminQuery(application.getDatabase()).toLiveQuery();
+            liveQuery1.addChangeListener(new LiveQuery.ChangeListener() {
+                @Override
+                public void changed(final LiveQuery.ChangeEvent event) {
+                    //TODO: Revise
+                    (getActivity()).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            QueryEnumerator enumerator = event.getRows();
+                            if (enumerator != null) {
+                                int totalAnsweredForCurrentlyLoggedInNodalUser = enumerator.getCount();
+                                tvQuestionsAnswered.setText(totalAnsweredForCurrentlyLoggedInNodalUser + "");
+                            }
+                        }
+                    });
+                }
+            });
+            liveQuery1.start();
+
+            LiveQuery liveQuery2 = application.getQAUnAnsweredForAdminQuery(application.getDatabase()).toLiveQuery();
+            liveQuery2.addChangeListener(new LiveQuery.ChangeListener() {
+                @Override
+                public void changed(final LiveQuery.ChangeEvent event) {
+                    //TODO: Revise
+                    (getActivity()).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            QueryEnumerator enumerator = event.getRows();
+                            if (enumerator != null) {
+                                int totalAnsweredForCurrentlyLoggedInNodalUser = enumerator.getCount();
+                                tvPendingQuestions.setText(totalAnsweredForCurrentlyLoggedInNodalUser + "");
+                            }
+                        }
+                    });
+                }
+            });
+            liveQuery2.start();
+
+            LiveQuery liveQuery4 = application.getDocForAdminQuery(application.getDatabase()).toLiveQuery();
+            liveQuery4.addChangeListener(new LiveQuery.ChangeListener() {
+                @Override
+                public void changed(final LiveQuery.ChangeEvent event) {
+                    //TODO: Revise
+                    (getActivity()).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            QueryEnumerator enumerator = event.getRows();
+                            if (enumerator != null) {
+                                int totalAnsweredForCurrentlyLoggedInNodalUser = enumerator.getCount();
+                                tvDocuments.setText(totalAnsweredForCurrentlyLoggedInNodalUser + "");
+                            }
+                        }
+                    });
+                }
+            });
+            liveQuery4.start();
+        } else{
+            LiveQuery liveQuery1 = application.getQAAnsweredForNodalQuery(application.getDatabase()).toLiveQuery();
+            liveQuery1.addChangeListener(new LiveQuery.ChangeListener() {
+                @Override
+                public void changed(final LiveQuery.ChangeEvent event) {
+                    //TODO: Revise
+                    (getActivity()).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            QueryEnumerator enumerator = event.getRows();
+                            if(enumerator != null){
+                                int totalAnsweredForCurrentlyLoggedInNodalUser = enumerator.getCount();
+                                tvQuestionsAnswered.setText(totalAnsweredForCurrentlyLoggedInNodalUser+"");
+                            }
+                        }
+                    });
+                }
+            });
+            liveQuery1.start();
+
+            LiveQuery liveQuery2 = application.getQAUnAnsweredForNodalQuery(application.getDatabase()).toLiveQuery();
+            liveQuery2.addChangeListener(new LiveQuery.ChangeListener() {
+                @Override
+                public void changed(final LiveQuery.ChangeEvent event) {
+                    //TODO: Revise
+                    (getActivity()).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            QueryEnumerator enumerator = event.getRows();
+                            if (enumerator != null) {
+                                int totalAnsweredForCurrentlyLoggedInNodalUser = enumerator.getCount();
+                                tvPendingQuestions.setText(totalAnsweredForCurrentlyLoggedInNodalUser + "");
+                            }
+                        }
+                    });
+                }
+            });
+            liveQuery2.start();
+
+            LiveQuery liveQuery4 = application.getDocForNodalQuery(application.getDatabase()).toLiveQuery();
+            liveQuery4.addChangeListener(new LiveQuery.ChangeListener() {
+                @Override
+                public void changed(final LiveQuery.ChangeEvent event) {
+                    //TODO: Revise
+                    (getActivity()).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            QueryEnumerator enumerator = event.getRows();
+                            if (enumerator != null) {
+                                int totalAnsweredForCurrentlyLoggedInNodalUser = enumerator.getCount();
+                                tvDocuments.setText(totalAnsweredForCurrentlyLoggedInNodalUser + "");
+                            }
+                        }
+                    });
+                }
+            });
+            liveQuery4.start();
+        }
+
+        LiveQuery liveQuery3 = application.getPublishedDocQuery(application.getDatabase()).toLiveQuery();
+        liveQuery3.addChangeListener(new LiveQuery.ChangeListener() {
+            @Override
+            public void changed(final LiveQuery.ChangeEvent event) {
+                //TODO: Revise
+                (getActivity()).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        QueryEnumerator enumerator = event.getRows();
+                        if (enumerator != null) {
+                            int totalAnsweredForCurrentlyLoggedInNodalUser = enumerator.getCount();
+                            tvShowcaseEvents.setText(totalAnsweredForCurrentlyLoggedInNodalUser + "");
+                        }
+                    }
+                });
+            }
+        });
+        liveQuery3.start();
     }
 
     @Override
@@ -210,13 +342,7 @@ public class DashboardFragment extends Fragment implements
          * As animation won't start on onCreate, post runnable is used
          */
         final View _view = view;
-        swipeRefreshLayout.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        fetchData(_view);
-                                    }
-                                }
-        );
+        fetchData(_view);
     }
 
     /**

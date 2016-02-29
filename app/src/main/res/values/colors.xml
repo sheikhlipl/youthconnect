@@ -28,4 +28,9 @@
     <color name="green">#4DBD33</color>
     <color name="divider_color">#B6B6B6</color>
 
+    <color name="bg_list">#ECEFF1</color>
+    <color name="black_translucent">#4D000000</color>
+    <color name="login_btn_color_pressed">#00897B</color>
+    <color name="black">#000000</color>
+
 </resources>

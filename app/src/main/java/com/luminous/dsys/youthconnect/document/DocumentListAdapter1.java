@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
@@ -27,7 +28,6 @@ import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
 import com.luminous.dsys.youthconnect.activity.NodalOfficerActivity;
 import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
-import com.luminous.dsys.youthconnect.pojo.Doc;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -233,8 +233,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
             public void onClick(DialogInterface dialog, int which) {
 
                 int is_delete = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_DELETE);
-                int is_publish = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
-                if(is_publish == 0 && is_delete == 0) {
+                if(is_delete == 0) {
                     try {
                         // Update the document with more data
                         Map<String, Object> updatedProperties = new HashMap<String, Object>();
@@ -255,6 +254,8 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
                             return;
                         }
                     });
+                } else{
+
                 }
 
                 dialog.dismiss();
@@ -302,7 +303,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
         TextView tvQusByUserName = (TextView) convertView.findViewById(R.id.tvQusByUserName);
         tvQusByUserName.setText((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME));
 
-        TextView tvTime = (TextView) convertView.findViewById(R.id.tvTime);
+        TextView tvTime = (TextView) convertView.findViewById(R.id.tvUserName);
         try {
             tvTime.setText(getTimeToShow((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED)));
         } catch(Exception exception){
@@ -390,7 +391,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
         public void onBindViewHolder(RecyclerView.ViewHolder rawHolder, int position) {
             ItemViewHolder holder = (ItemViewHolder) rawHolder;
 
-            holder.img.setImageResource(R.drawable.ic_menu_send);
+            holder.img.setImageResource(R.drawable.ic_get_app_black);
             holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
             holder.img.setTag(position);
             holder.progressBar.setTag(position);
@@ -407,13 +408,13 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
              if (_file.exists()) {
                 holder.progressBar.setVisibility(View.INVISIBLE);
                 holder.img.setVisibility(View.VISIBLE);
-                setImage(_file, holder);
+                setImage(_file, holder, position);
             } else {
                 if(Util.getNetworkConnectivityStatus(context)) {
                     BgAsync async = new BgAsync(position, holder, context, doc_id);
                     async.execute();
                 } else{
-
+                    Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -550,11 +551,11 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
 
                 viewHolder.progressBar.setVisibility(View.INVISIBLE);
                 viewHolder.img.setVisibility(View.VISIBLE);
-                setImage(file, viewHolder);
+                setImage(file, viewHolder, index);
             }
         }
 
-        private void setImage(File file, ItemViewHolder viewHolder) {
+        private void setImage(File file, ItemViewHolder viewHolder, int position) {
             if (file == null || file.getAbsolutePath() == null) {
                 return;
             }
@@ -572,52 +573,57 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
 
                 if (bitmap != null) {
                     viewHolder.img.setImageBitmap(bitmap);
-                } else {
-                    viewHolder.img.setImageResource(R.drawable.ic_menu_send);
-                    viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
-                }
 
-                viewHolder.img.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //Open Image
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        File file = new File(filePath);
-                        String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
-                        String mimetype = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                        if (extension.equalsIgnoreCase("") || mimetype == null) {
-                            // if there is no extension or there is no definite mimetype, still try to open the file
-                            intent.setDataAndType(Uri.fromFile(file), "image/*");
-                        } else {
-                            intent.setDataAndType(Uri.fromFile(file), mimetype);
-                        }
+                    viewHolder.img.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            //Open Image
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            File file = new File(filePath);
+                            String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
+                            String mimetype = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                            if (extension.equalsIgnoreCase("") || mimetype == null) {
+                                // if there is no extension or there is no definite mimetype, still try to open the file
+                                intent.setDataAndType(Uri.fromFile(file), "image/*");
+                            } else {
+                                intent.setDataAndType(Uri.fromFile(file), mimetype);
+                            }
 
-                        // custom message for the intent
-                        Intent appIntent = Intent.createChooser(intent, "Choose an Application:");
-                        if (appIntent != null) {
-                            context.startActivity(appIntent);
-                        } else {
-                            if (context != null && context instanceof MainActivity) {
-                                AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context, R.style.AppCompatAlertDialogStyle);
-                                builder.setTitle(context.getResources().getString(R.string.no_app_found_title));
-                                builder.setMessage(context.getResources().getString(R.string.no_app_found_message));
-                                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                                builder.show();
+                            // custom message for the intent
+                            Intent appIntent = Intent.createChooser(intent, "Choose an Application:");
+                            if (appIntent != null) {
+                                context.startActivity(appIntent);
+                            } else {
+                                if (context != null && context instanceof MainActivity) {
+                                    AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context, R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle(context.getResources().getString(R.string.no_app_found_title));
+                                    builder.setMessage(context.getResources().getString(R.string.no_app_found_message));
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                                    builder.show();
+                                }
                             }
                         }
+                    });
+                } else {
+                    viewHolder.img.setImageResource(R.drawable.ic_get_app_black);
+                    viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+
+                    if(Util.getNetworkConnectivityStatus(context)) {
+                        BgAsync async = new BgAsync(position, viewHolder, context, doc_id);
+                        async.execute();
                     }
-                });
+                }
             } else if (filePath != null && filePath.length() > 0
                     && ((filePath.contains("mp4")) ||
                     (filePath.contains("flv")) ||
                     (filePath.contains("3gp")) ||
                     (filePath.contains("avi")))) {
-                viewHolder.img.setImageResource(R.drawable.ic_action_play_over_video);
+                viewHolder.img.setImageResource(R.drawable.ic_play_circle_outline_black);
                 viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
                 viewHolder.img.setPadding(12, 12, 12, 12);
 
@@ -659,8 +665,8 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
 
             } else {
 
-                viewHolder.img.setImageResource(R.drawable.ic_insert_drive_file);
-                viewHolder.img.setBackgroundResource(R.color.blue);
+                viewHolder.img.setImageResource(R.drawable.ic_open_in_new_black);
+                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
                     @Override

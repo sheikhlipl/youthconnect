@@ -2,8 +2,6 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v4.app.NavUtils;
@@ -21,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
@@ -28,21 +27,24 @@ import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.pojo.Answer;
+import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
-import com.luminous.dsys.youthconnect.qa.QaListAdapter;
+import com.luminous.dsys.youthconnect.pojo.Question;
+import com.luminous.dsys.youthconnect.pojo.QuestionAndAnswer;
+import com.luminous.dsys.youthconnect.qa.QAUtil;
 import com.luminous.dsys.youthconnect.qa.QaListAdapter1;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +52,10 @@ import java.util.Map;
  * Created by luminousinfoways on 18/12/15.
  */
 public class QAPendingActivity extends BaseActivity implements
-        QaListAdapter1.OnDeleteClickListener, QaListAdapter1.OnUpdateClickListenr,
+        QaListAdapter1.OnDeleteClickListener, QaListAdapter1.OnUnPublishClickListenr,
+        QaListAdapter1.OnEditQuestionClickListenr, QaListAdapter1.OnAnswerClickListenr,
+        QaListAdapter1.OnEditAnswerClickListenr, QaListAdapter1.OnCommentClickListenr,
+        QaListAdapter1.OnPublishClickListenr,
         Replication.ChangeListener{
 
     private static final String TAG = "QAPendingActivity";
@@ -168,7 +173,7 @@ public class QAPendingActivity extends BaseActivity implements
             if(application.getQAUnAnsweredForAdminQuery(application.getDatabase()) != null) {
                 mAdapter = new QaListAdapter1(this, application.getQAUnAnsweredForAdminQuery
                         (application.getDatabase()).toLiveQuery(),
-                        this, this, false, true, false);
+                        this, this, this, this, this, this, this, false, true, false);
                 mListView.setAdapter(mAdapter);
             }
         } else{
@@ -176,128 +181,608 @@ public class QAPendingActivity extends BaseActivity implements
             if(application.getQAUnAnsweredForNodalQuery(application.getDatabase()) != null) {
                 mAdapter = new QaListAdapter1(this, application.getQAUnAnsweredForNodalQuery
                         (application.getDatabase()).toLiveQuery(),
-                        this, this, false, true, false);
+                        this, this, this, this, this, this, this, false, true, false);
                 mListView.setAdapter(mAdapter);
             }
         }
 
-        mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 
-        mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
-
-            @Override
-            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-
-            @Override
-            public void onDestroyActionMode(ActionMode mode) {
-                // TODO Auto-generated method stub
-                mAdapter.clearSelection();
-            }
-
-            @Override
-            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                // TODO Auto-generated method stub
-
-                nr = 0;
-                MenuInflater inflater = getMenuInflater();
-                inflater.inflate(R.menu.contextual_menu_qa_pending, menu);
-                QAPendingActivity.this.menu = menu;
-
-                int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
-                if(user_type_id == 2){
-                    menu.getItem(1).setVisible(false);
-                }
-
-                return true;
-            }
-
-            @Override
-            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                // TODO Auto-generated method stub
-                switch (item.getItemId()) {
-
-                    case R.id.item_delete:
-                        mAdapter.deleteQA();
-                        mode.finish();
-                        break;
-
-                    case R.id.item_edit:
-                        mAdapter.editQuestion();
-                        mode.finish();
-                        break;
-
-                    case R.id.item_answer:
-                        mAdapter.postAnswer();
-                        mode.finish();
-                        break;
-                }
-                return true;
-            }
-
-            @Override
-            public void onItemCheckedStateChanged(ActionMode mode, int position,
-                                                  long id, boolean checked) {
-                // TODO Auto-generated method stub
-                if (checked) {
-                    nr++;
-                    mAdapter.setNewSelection(position, checked);
-                } else {
-                    nr--;
-                    mAdapter.removeSelection(position);
-                }
-                mode.setTitle(nr + " selected");
-                changeAndInflate();
-            }
-        });
-
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-
-            @Override
-            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-                                           int position, long arg3) {
-                // TODO Auto-generated method stub
-
-                mListView.setItemChecked(position, !mAdapter.isPositionChecked(position));
-                return false;
-            }
-        });
-
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                View v = mAdapter.getView(position, view, parent);
-                RelativeLayout layoutFileList = (RelativeLayout) v.findViewById(R.id.layoutFileList);
-                if (layoutFileList.getVisibility() == View.VISIBLE) {
-                    layoutFileList.setVisibility(View.GONE);
-                } else {
-                    layoutFileList.setVisibility(View.VISIBLE);
-                }
-            }
-        });
     }
 
-    private void changeAndInflate(){
-        if(nr > 1) {
-            menu.getItem(0).setVisible(false);
-            menu.getItem(0).setVisible(false);
+    @Override
+    public void onUnPublishClick(final Document _qaDoc) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                R.style.AppCompatAlertDialogStyle);
+        builder.setTitle("Un-Publish Question");
+        builder.setMessage("Are you sure want to un-publish this question?");
+        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                try {
+                    // Update the document with more data
+                    Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                    updatedProperties.putAll(_qaDoc.getProperties());
+                    updatedProperties.put(BuildConfigYouthConnect.QA_IS_PUBLISHED, 0);
+                    _qaDoc.putProperties(updatedProperties);
+                } catch (CouchbaseLiteException e) {
+                    Log.e(TAG, "Error putting", e);
+                }
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                        R.style.AppCompatAlertDialogStyle);
+                builder.setTitle("Un-Publish Question");
+                builder.setMessage("Done successfully.");
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+
+                        Intent intent = new Intent(QAPendingActivity.this, QAAnsweredActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                        finish();
+
+                        return;
+                    }
+                });
+                builder.show();
+
+                return;
+            }
+        });
+        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                return;
+            }
+        });
+        builder.show();
+    }
+
+    @Override
+    public void onDeleteClick(final Document _qaDoc) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                R.style.AppCompatAlertDialogStyle);
+        builder.setTitle("Delete Question");
+        builder.setMessage("Are you sure want to delete this question?");
+        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                try {
+                    // Update the document with more data
+                    Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                    updatedProperties.putAll(_qaDoc.getProperties());
+                    updatedProperties.put(BuildConfigYouthConnect.QA_IS_DELETE, 1);
+                    _qaDoc.putProperties(updatedProperties);
+                } catch (CouchbaseLiteException e) {
+                    Log.e(TAG, "Error putting", e);
+                }
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                        R.style.AppCompatAlertDialogStyle);
+                builder.setTitle("Delete Question");
+                builder.setMessage("Done successfully.");
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        return;
+                    }
+                });
+                builder.show();
+
+                return;
+            }
+        });
+        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                return;
+            }
+        });
+        builder.show();
+    }
+
+    @Override
+    public void onEditQuestionClick(final Document qaDoc) {
+
+        String description = (String) qaDoc.getProperty(BuildConfigYouthConnect.QA_DESC);
+
+        LayoutInflater li = LayoutInflater.from(QAPendingActivity.this);
+        View promptsView = li.inflate(R.layout.alert_dialog_with_input_text, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                QAPendingActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        final EditText userInputTitle = (EditText) promptsView
+                .findViewById(R.id.editTextDialogUserInputQTitle);
+        final EditText userInputDesc = (EditText) promptsView
+                .findViewById(R.id.editTextDialogUserInputQDescription);
+        TextView textView1 = (TextView) promptsView.findViewById(R.id.textView1);
+        TextView questionDescription = (TextView) promptsView.findViewById(R.id.textViewQuestion);
+        questionDescription.setText(description);
+        userInputTitle.setHint("Question Title");
+        userInputDesc.setHint("Question Description");
+
+        questionDescription.setVisibility(View.GONE);
+        textView1.setText("Edit this question.");
+        userInputDesc.setVisibility(View.VISIBLE);
+
+        // set dialog message
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // get user input and set it to result
+                                // edit text
+                                dialog.dismiss();
+
+                                final String mInputedStringForEditQuestionTitle = userInputTitle.getText().toString().trim();
+                                final String mInputedStringForEditQuestionDescription = userInputDesc.getText().toString().trim();
+
+                                if (mInputedStringForEditQuestionTitle == null
+                                        || mInputedStringForEditQuestionTitle.trim().length() <= 0) {
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Edit Question");
+                                    builder.setMessage("Provide title for question.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                } else if (mInputedStringForEditQuestionDescription == null
+                                        || mInputedStringForEditQuestionDescription.trim().length() <= 0) {
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Edit Question");
+                                    builder.setMessage("Provide description for question.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                } else {
+
+                                    try {
+                                        // Update the document with more data
+                                        Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                                        updatedProperties.putAll(qaDoc.getProperties());
+                                        updatedProperties.put(BuildConfigYouthConnect.QA_TITLE, mInputedStringForEditQuestionTitle);
+                                        updatedProperties.put(BuildConfigYouthConnect.QA_DESC, mInputedStringForEditQuestionDescription);
+                                        qaDoc.putProperties(updatedProperties);
+                                    } catch (CouchbaseLiteException e) {
+                                        Log.e(TAG, "Error putting", e);
+                                    }
+                                }
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
+    @Override
+    public void onAnswerClick(final Document qaDoc) {
+        String description = (String) qaDoc.getProperty(BuildConfigYouthConnect.QA_DESC);
+        LayoutInflater li1 = LayoutInflater.from(QAPendingActivity.this);
+        View promptsView1 = li1.inflate(R.layout.alert_dialog_with_input_text, null);
+
+        AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(
+                QAPendingActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder1.setView(promptsView1);
+
+        final EditText userInputTitle1 = (EditText) promptsView1
+                .findViewById(R.id.editTextDialogUserInputQTitle);
+        final EditText userInputDesc1 = (EditText) promptsView1
+                .findViewById(R.id.editTextDialogUserInputQDescription);
+        TextView textView11 = (TextView) promptsView1.findViewById(R.id.textView1);
+        TextView questionDescription11 = (TextView) promptsView1.findViewById(R.id.textViewQuestion);
+        questionDescription11.setText(description);
+
+        questionDescription11.setVisibility(View.VISIBLE);
+        textView11.setText("Answer this question.");
+        userInputDesc1.setVisibility(View.GONE);
+
+        // set dialog message
+        alertDialogBuilder1
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // get user input and set it to result
+                                // edit text
+                                dialog.dismiss();
+
+                                final String mInputedStringForAnswer = userInputTitle1.getText().toString().trim();
+
+                                if (mInputedStringForAnswer == null
+                                        || mInputedStringForAnswer.trim().length() <= 0) {
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Answer Question");
+                                    builder.setMessage("Answer to this question.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                } else {
+
+                                    int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                            .getInt(Constants.SP_USER_ID, 0);
+                                    String currently_logged_in_user_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                            .getString(Constants.SP_USER_NAME, "");
+                                    Answer answer = new Answer(Parcel.obtain());
+                                    answer.setAnswer_by_user_id(currently_logged_in_user_id);
+                                    answer.setAnswer_by_user_name(currently_logged_in_user_name);
+                                    answer.setQadmin_description(mInputedStringForAnswer);
+
+                                    List<Answer> answerList = new ArrayList<Answer>();
+                                    answerList.add(answer);
+
+                                    try {
+                                        // Update the document with more data
+                                        Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                                        updatedProperties.putAll(qaDoc.getProperties());
+                                        updatedProperties.put(BuildConfigYouthConnect.QA_ANSWER, answerList);
+                                        updatedProperties.put(BuildConfigYouthConnect.QA_IS_ANSWERED, 1);
+                                        qaDoc.putProperties(updatedProperties);
+                                    } catch (CouchbaseLiteException e) {
+                                        Log.e(TAG, "Error putting", e);
+                                    }
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Answer to Question");
+                                    builder.setMessage("Done successfully.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+
+                                            Intent intent = new Intent(QAPendingActivity.this, QAAnsweredActivity.class);
+                                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                            startActivity(intent);
+                                            finish();
+
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                }
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog1 = alertDialogBuilder1.create();
+
+        // show it
+        alertDialog1.show();
+    }
+
+    @Override
+    public void onEditAnswerClick(final Document _qaDoc) {
+
+        QuestionAndAnswer questionAndAnswer = QAUtil.getQAFromDocument(_qaDoc);
+        List<Answer> previousData = questionAndAnswer.getAnswerList();
+
+        String answer = "";
+        if(previousData != null && previousData.size() > 0
+                && previousData.get(0) != null
+                && previousData.get(0).getQadmin_description() != null) {
+            answer = previousData.get(0).getQadmin_description();
         } else{
-            menu.getItem(1).setVisible(true);
-            menu.getItem(1).setVisible(true);
+            answer = "Not answered yet.";
         }
+        LayoutInflater li1 = LayoutInflater.from(QAPendingActivity.this);
+        View promptsView1 = li1.inflate(R.layout.alert_dialog_with_input_text, null);
+
+        AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(
+                QAPendingActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder1.setView(promptsView1);
+
+        final EditText userInputTitle1 = (EditText) promptsView1
+                .findViewById(R.id.editTextDialogUserInputQTitle);
+        final EditText userInputDesc1 = (EditText) promptsView1
+                .findViewById(R.id.editTextDialogUserInputQDescription);
+        TextView textView11 = (TextView) promptsView1.findViewById(R.id.textView1);
+        TextView questionDescription11 = (TextView) promptsView1.findViewById(R.id.textViewQuestion);
+        questionDescription11.setText(answer);
+
+        questionDescription11.setVisibility(View.VISIBLE);
+        textView11.setText("Edit Answer.");
+        userInputDesc1.setVisibility(View.GONE);
+
+        // set dialog message
+        alertDialogBuilder1
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // get user input and set it to result
+                                // edit text
+                                dialog.dismiss();
+
+                                String new_comment = userInputTitle1.getText().toString().trim();
+
+                                if (new_comment == null
+                                        || new_comment.trim().length() <= 0) {
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Edit Answer");
+                                    builder.setMessage("Comment to this question.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                } else {
+
+                                    int answer_by_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                            .getInt(Constants.SP_USER_ID, 0);
+                                    String answer_by_user_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                            .getString(Constants.SP_USER_NAME, "");
+
+                                    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                                    Calendar calendar = GregorianCalendar.getInstance();
+                                    String currentTimeString = dateFormatter.format(calendar.getTime());
+
+                                    List<Answer> answers = new ArrayList<Answer>();
+                                    Answer answer1 = new Answer(Parcel.obtain());
+                                    answer1.setQadmin_description(new_comment);
+                                    answer1.setAnswer_by_user_id(answer_by_user_id);
+                                    answer1.setAnswer_by_user_name(answer_by_user_name);
+                                    answer1.setCreated(currentTimeString);
+
+                                    try {
+                                        // Update the document with more data
+                                        Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                                        updatedProperties.putAll(_qaDoc.getProperties());
+                                        updatedProperties.put(BuildConfigYouthConnect.QA_ANSWER, answers);
+                                        _qaDoc.putProperties(updatedProperties);
+                                    } catch (CouchbaseLiteException e) {
+                                        Log.e(TAG, "Error putting", e);
+                                    }
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Edit Answer");
+                                    builder.setMessage("Done successfully.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                }
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog1 = alertDialogBuilder1.create();
+
+        // show it
+        alertDialog1.show();
     }
 
-
     @Override
-    public void onUpdateClick(Document student) {
+    public void onCommentClick(final Document _qaDoc) {
+        LayoutInflater li1 = LayoutInflater.from(QAPendingActivity.this);
+        View promptsView1 = li1.inflate(R.layout.alert_dialog_with_input_text, null);
 
+        AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(
+                QAPendingActivity.this);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder1.setView(promptsView1);
+
+        final EditText userInputTitle1 = (EditText) promptsView1
+                .findViewById(R.id.editTextDialogUserInputQTitle);
+        final EditText userInputDesc1 = (EditText) promptsView1
+                .findViewById(R.id.editTextDialogUserInputQDescription);
+        TextView textView11 = (TextView) promptsView1.findViewById(R.id.textView1);
+        TextView questionDescription11 = (TextView) promptsView1.findViewById(R.id.textViewQuestion);
+        questionDescription11.setText("");
+
+        questionDescription11.setVisibility(View.VISIBLE);
+        textView11.setText("Post your comment.");
+        userInputDesc1.setVisibility(View.GONE);
+
+        // set dialog message
+        alertDialogBuilder1
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // get user input and set it to result
+                                // edit text
+                                dialog.dismiss();
+
+                                String new_comment = userInputTitle1.getText().toString().trim();
+
+                                if (new_comment == null
+                                        || new_comment.trim().length() <= 0) {
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Comment Question");
+                                    builder.setMessage("Comment to this question.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                } else {
+                                    QuestionAndAnswer questionAndAnswer = QAUtil.getQAFromDocument(_qaDoc);
+                                    List<Comment> previousData = questionAndAnswer.getCommentList();
+
+                                    if(previousData == null) {
+                                        previousData = new ArrayList<Comment>();
+                                    }
+
+                                    int comment_by_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                            .getInt(Constants.SP_USER_ID, 0);
+                                    String comment_by_user_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                            .getString(Constants.SP_USER_NAME, "");
+
+                                    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                                    Calendar calendar = GregorianCalendar.getInstance();
+                                    String currentTimeString = dateFormatter.format(calendar.getTime());
+
+                                    Comment comment = new Comment(Parcel.obtain());
+                                    comment.setComment_description(new_comment);
+                                    comment.setComment_by_user_name(comment_by_user_name);
+                                    comment.setComment_by_user_id(comment_by_user_id);
+                                    String timestamp = currentTimeString;
+                                    comment.setCreated(timestamp);
+                                    previousData.add(comment);
+
+                                    try {
+                                        // Update the document with more data
+                                        Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                                        updatedProperties.putAll(_qaDoc.getProperties());
+                                        updatedProperties.put(BuildConfigYouthConnect.QA_COMMENT, previousData);
+                                        _qaDoc.putProperties(updatedProperties);
+                                    } catch (CouchbaseLiteException e) {
+                                        Log.e(TAG, "Error putting", e);
+                                    }
+
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                            R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle("Comment on QA");
+                                    builder.setMessage("Done successfully.");
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            return;
+                                        }
+                                    });
+                                    builder.show();
+                                }
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog1 = alertDialogBuilder1.create();
+
+        // show it
+        alertDialog1.show();
     }
 
     @Override
-    public void onDeleteClick(Document student) {
+    public void onPublishClick(final Document _qaDoc) {
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(QAPendingActivity.this,
+                R.style.AppCompatAlertDialogStyle);
+        builder1.setTitle("Publish Question");
+        builder1.setMessage("Are you sure want to publish this question?");
+        builder1.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
 
+                try {
+                    // Update the document with more data
+                    Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                    updatedProperties.putAll(_qaDoc.getProperties());
+                    updatedProperties.put(BuildConfigYouthConnect.QA_IS_PUBLISHED, 1);
+                    _qaDoc.putProperties(updatedProperties);
+                } catch (CouchbaseLiteException e) {
+                    Log.e(TAG, "Error putting", e);
+                }
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                        R.style.AppCompatAlertDialogStyle);
+                builder.setTitle("Publish Question");
+                builder.setMessage("Done successfully.");
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+
+                        Intent intent = new Intent(QAPendingActivity.this, QAPublishedActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                        finish();
+
+                        return;
+                    }
+                });
+                builder.show();
+
+                return;
+            }
+        });
+        builder1.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                return;
+            }
+        });
+        builder1.show();
     }
 
     @Override
@@ -312,4 +797,5 @@ public class QAPendingActivity extends BaseActivity implements
             Log.e(TAG, "onCreate()", exception);
         }
     }
+
 }

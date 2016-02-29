@@ -103,92 +103,98 @@ public class DocListActivity extends BaseActivity implements
         }
 
         mListView.setAdapter(mAdapter);
-        mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 
-        mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+        int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+        if(user_type_id == 1) {
 
-            @Override
-            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                // TODO Auto-generated method stub
-                return false;
-            }
+            mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 
-            @Override
-            public void onDestroyActionMode(ActionMode mode) {
-                // TODO Auto-generated method stub
-                mAdapter.clearSelection();
-            }
+            mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
 
-            @Override
-            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                // TODO Auto-generated method stub
-
-                nr = 0;
-                MenuInflater inflater = getMenuInflater();
-                inflater.inflate(R.menu.contextual_menu, menu);
-                DocListActivity.this.menu = menu;
-
-                int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
-                if(user_type_id == 2){
-                    menu.getItem(1).setVisible(false);
-                    menu.getItem(2).setVisible(false);
+                @Override
+                public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                    // TODO Auto-generated method stub
+                    return false;
                 }
 
-                return true;
-            }
-
-            @Override
-            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                // TODO Auto-generated method stub
-                switch (item.getItemId()) {
-
-                    case R.id.item_delete:
-                        mAdapter.deleteDocuments();
-                        mode.finish();
-                        break;
-
-                    case R.id.item_publish_unpublish:
-                        mAdapter.publishDocuments();
-                        mode.finish();
-                        break;
-
-                    case R.id.item_send_to_nodal:
-                        mAdapter.sendToNodalOfficers();
-                        mode.finish();
-                        break;
+                @Override
+                public void onDestroyActionMode(ActionMode mode) {
+                    // TODO Auto-generated method stub
+                    mAdapter.clearSelection();
                 }
-                return true;
-            }
 
-            @Override
-            public void onItemCheckedStateChanged(ActionMode mode, int position,
-                                                  long id, boolean checked) {
-                // TODO Auto-generated method stub
-                if (checked) {
-                    nr++;
-                    mAdapter.setNewSelection(position, checked);
-                } else {
-                    nr--;
-                    mAdapter.removeSelection(position);
+                @Override
+                public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                    // TODO Auto-generated method stub
+
+                    nr = 0;
+                    MenuInflater inflater = getMenuInflater();
+                    inflater.inflate(R.menu.contextual_menu, menu);
+                    DocListActivity.this.menu = menu;
+
+                    int user_type_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+                    if (user_type_id == 2) {
+                        menu.getItem(0).setVisible(false);
+                        menu.getItem(1).setVisible(false);
+                        menu.getItem(2).setVisible(false);
+                    }
+
+                    return true;
                 }
-                mode.setTitle(nr + " selected");
-                changeAndInflate();
-            }
-        });
 
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                @Override
+                public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                    // TODO Auto-generated method stub
+                    switch (item.getItemId()) {
 
-            @Override
-            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-                                           int position, long arg3) {
-                // TODO Auto-generated method stub
+                        case R.id.item_delete:
+                            mAdapter.deleteDocuments();
+                            mode.finish();
+                            break;
 
-                mListView.setItemChecked(position, !mAdapter.isPositionChecked(position));
-                return false;
-            }
-        });
+                        case R.id.item_publish_unpublish:
+                            mAdapter.publishDocuments();
+                            mode.finish();
+                            break;
 
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        case R.id.item_send_to_nodal:
+                            mAdapter.sendToNodalOfficers();
+                            mode.finish();
+                            break;
+                    }
+                    return true;
+                }
+
+                @Override
+                public void onItemCheckedStateChanged(ActionMode mode, int position,
+                                                      long id, boolean checked) {
+                    // TODO Auto-generated method stub
+                    if (checked) {
+                        nr++;
+                        mAdapter.setNewSelection(position, checked);
+                    } else {
+                        nr--;
+                        mAdapter.removeSelection(position);
+                    }
+                    mode.setTitle(nr + " selected");
+                    changeAndInflate();
+                }
+            });
+
+            mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+                @Override
+                public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+                                               int position, long arg3) {
+                    // TODO Auto-generated method stub
+
+                    mListView.setItemChecked(position, !mAdapter.isPositionChecked(position));
+                    return false;
+                }
+            });
+        }
+
+        /*mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             View v = mAdapter.getView(position, view, parent);
@@ -199,7 +205,7 @@ public class DocListActivity extends BaseActivity implements
                 layoutFileList.setVisibility(View.VISIBLE);
             }
             }
-        });
+        });*/
     }
 
     private void changeAndInflate(){

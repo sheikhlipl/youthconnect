@@ -3,159 +3,152 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    android:layout_marginBottom="12dp"
     android:descendantFocusability="blocksDescendants">
 
-    <android.support.v7.widget.CardView
+     <android.support.v7.widget.CardView
         android:id="@+id/card_view"
         android:layout_gravity="center"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
+        android:layout_marginLeft="@dimen/qa_list_margin"
+         android:layout_marginRight="@dimen/qa_list_margin"
+         android:layout_marginBottom="@dimen/qa_list_margin"
         card_view:cardCornerRadius="2dp"
         card_view:contentPadding="10dp">
+         <RelativeLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content">
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/layoutQusImg">
+             <TextView
+                 android:id="@+id/tvFileTitle"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_margin="5dp"
+                 android:text="Question Title"
+                 android:textStyle="bold"
+                 android:layout_toLeftOf="@+id/imgDownArrow"
+                 android:textColor="@color/textColorPrimary"
+                 android:textSize="18sp" />
 
-        <RelativeLayout
-            android:id="@+id/layout_above"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp">
+             <ImageView
+                 android:id="@+id/imgDownArrow"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:src="@drawable/ic_keyboard_arrow_down"
+                 android:adjustViewBounds="true"
+                 android:scaleType="fitCenter"
+                 android:layout_alignParentRight="true"
+                 android:layout_alignBottom="@+id/tvFileTitle"/>
 
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:id="@+id/layoutCircleImage">
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/profile_image"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@color/red"
-                    android:layout_marginLeft="12dp"
-                    android:layout_marginRight="12dp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/tvUserNameShortCut"
-                    android:textColor="@color/white"
-                    android:textAppearance="?android:textAppearanceLarge"
-                    android:layout_centerInParent="true"/>
-            </RelativeLayout>
+             <include layout="@layout/edit_and_comment"
+                 android:id="@+id/layout_comment"
+                 android:visibility="gone"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_alignParentRight="true"
+                 android:layout_below="@+id/imgDownArrow"/>
 
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toRightOf="@+id/layoutCircleImage"
-                android:id="@+id/layoutCard">
-                <TextView
-                    android:id="@+id/tvFileTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:text="Title"
-                    android:textStyle="bold"
-                    android:singleLine="true"
-                    android:maxLength="36"
-                    android:ellipsize="end"
-                    android:layout_toLeftOf="@+id/tvTime"
-                    android:textColor="@color/textColorPrimary"
-                    android:textSize="18sp" />
+             <TextView
+                 android:id="@+id/tvQusByUserName"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_below="@+id/tvFileTitle"
+                 android:layout_margin="5dp"
+                 android:text="User Name"
+                 android:textColor="@color/secondary_text_color"
+                 android:textSize="12sp" />
 
-                <TextView
-                    android:id="@+id/tvTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_margin="5dp"
-                    android:textStyle="bold"
-                    android:gravity="left"
-                    android:text="12:12 PM"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="12sp" />
+             <TextView
+                 android:id="@+id/tvUserName"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_toRightOf="@+id/tvQusByUserName"
+                 android:layout_alignBaseline="@+id/tvQusByUserName"
+                 android:layout_margin="5dp"
+                 android:gravity="left"
+                 android:text="at 12:12 PM"
+                 android:textColor="@color/colorPrimary"
+                 android:textSize="12sp" />
 
-                <TextView
-                    android:id="@+id/tvQusByUserName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/tvFileTitle"
-                    android:layout_margin="5dp"
-                    android:text="User Name"
-                    android:textColor="@color/secondary_text_color"
-                    android:textSize="12sp" />
+             <TextView
+                 android:id="@+id/tvQuestionDesc"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_margin="5dp"
+                 android:text="Description"
+                 android:layout_below="@+id/tvQusByUserName"
+                 android:textColor="@color/textColorPrimary" />
 
-            </RelativeLayout>
-        </RelativeLayout>
+             <TextView
+                 android:id="@+id/tvAnswerTitle"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_margin="5dp"
+                 android:text="Answer"
+                 android:textStyle="bold"
+                 android:textColor="@color/textColorPrimary"
+                 android:textSize="14sp"
+                 android:layout_below="@+id/tvQuestionDesc"/>
 
-        <RelativeLayout
-            android:id="@+id/layoutAnswerAndComment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:layout_below="@+id/layout_above">
+             <TextView
+                 android:id="@+id/tvAnswerDescription"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_margin="5dp"
+                 android:text="No answer to display"
+                 android:textColor="@color/textColorPrimary"
+                 android:textSize="12sp"
+                 android:layout_below="@+id/tvAnswerTitle"/>
 
-            <LinearLayout
-                android:id="@+id/layoutDivider"
-                android:layout_width="match_parent"
-                android:orientation="vertical"
-                android:layout_height="1dp"
-                android:background="@color/light_gray"/>
+             <TextView
+                 android:id="@+id/tvCommentTitle"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_margin="5dp"
+                 android:text="Comments"
+                 android:textStyle="bold"
+                 android:textColor="@color/textColorPrimary"
+                 android:textSize="14sp"
+                 android:layout_below="@+id/tvAnswerDescription"/>
 
-            <LinearLayout
-                android:id="@+id/layoutAnswerList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp"
-                android:layout_marginBottom="12dp"
-                android:layout_below="@+id/layoutDivider"/>
+             <LinearLayout
+                 android:id="@+id/layoutComments"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:orientation="vertical"
+                 android:layout_below="@+id/tvCommentTitle">
 
-                <LinearLayout
-                    android:id="@+id/layoutCommentLsit"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="12dp"
-                    android:layout_below="@+id/layoutAnswerList"
-                    />
+                 <TextView
+                     android:id="@+id/noComments"
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:layout_margin="5dp"
+                     android:text="No comments to display"
+                     android:textColor="@color/textColorPrimary"
+                     android:textSize="12sp"
+                     android:layout_below="@+id/tvAnswerTitle"/>
 
-            <LinearLayout
-                android:id="@+id/layoutDivider2"
-                android:layout_width="match_parent"
-                android:orientation="vertical"
-                android:layout_height="1dp"
-                android:layout_below="@+id/layoutCommentLsit"
-                android:background="@color/light_gray"/>
+             </LinearLayout>
 
-        </RelativeLayout>
+             <EditText
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/editTextPostAnswerOrComment"
+                 android:layout_marginTop="12dp"
+                 android:layout_below="@+id/layoutComments"
+                 android:hint="Post Here"/>
 
-        <RelativeLayout
-            android:id="@+id/layoutFileList"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/layout_above">
+             <!--<ImageView-->
+                 <!--android:layout_width="40dp"-->
+                 <!--android:layout_height="40dp"-->
+                 <!--android:padding="10dp"-->
+                 <!--android:id="@+id/imgSend"-->
+                 <!--android:src="@drawable/ic_menu_send"-->
+                 <!--android:layout_alignParentRight="true"-->
+                 <!--android:layout_alignBottom="@+id/editTextPostAnswerOrComment"-->
+                 <!--android:background="@drawable/circle_light_blue_with_white_stroke"/>-->
+         </RelativeLayout>
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/item_horizontal_list"
-                android:layout_width="match_parent"
-                android:fadeScrollbars="true"
-                android:layout_height="120dp"/>
-
-        </RelativeLayout>
-
-        <com.luminous.dsys.youthconnect.util.TriangleShapeView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        </com.luminous.dsys.youthconnect.util.TriangleShapeView>
-
-    </RelativeLayout>
-</android.support.v7.widget.CardView>
+    </android.support.v7.widget.CardView>
 
 </RelativeLayout>

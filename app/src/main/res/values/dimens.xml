@@ -16,4 +16,11 @@
     <dimen name="card_elevation">5dp</dimen>
     <dimen name="showcase_item_card_padding">12dp</dimen>
     <dimen name="text_elevation">5dp</dimen>
+    <dimen name="edit_margin">10dp</dimen>
+    <dimen name="qa_list_margin">12dp</dimen>
+    <dimen name="red_circle_width_height">22dp</dimen>
+    <dimen name="view_feedback_list_margin_top">12dp</dimen>
+    <dimen name="settings_top_layout_profile_details_margin">12dp</dimen>
+    <dimen name="settings_profile_name_margin_left">20dp</dimen>
+    <dimen name="settings_change_password_layout_margin">12dp</dimen>
 </resources>

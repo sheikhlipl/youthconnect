@@ -2,8 +2,21 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_marginBottom="12dp"
+    android:background="@color/bg_list"
     android:descendantFocusability="blocksDescendants">
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/card_view"
+        android:layout_gravity="center"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/qa_list_margin"
+        android:layout_marginRight="@dimen/qa_list_margin"
+        android:layout_marginBottom="@dimen/qa_list_margin"
+        card_view:cardCornerRadius="2dp"
+        card_view:contentPadding="10dp">
 
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -54,12 +67,12 @@
                     android:singleLine="true"
                     android:maxLength="36"
                     android:ellipsize="end"
-                    android:layout_toLeftOf="@+id/tvTime"
+                    android:layout_toLeftOf="@+id/tvUserName"
                     android:textColor="@color/textColorPrimary"
                     android:textSize="18sp" />
 
                 <TextView
-                    android:id="@+id/tvTime"
+                    android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
@@ -127,7 +140,7 @@
 
         <RelativeLayout
             android:id="@+id/layoutFileList"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/layout_above">
@@ -141,12 +154,5 @@
         </RelativeLayout>
 
     </RelativeLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:orientation="vertical"
-        android:background="@color/light_gray"
-        android:layout_below="@+id/layoutQusImg"/>
-
+    </android.support.v7.widget.CardView>
 </RelativeLayout>

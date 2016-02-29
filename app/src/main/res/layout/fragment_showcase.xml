@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/coordinatorLayout"
+    android:background="@color/bg_list"
     tools:context="com.luminousinfoways.bloodbank.fragment.AllDonorListFragment">
 
         <!--<android.support.v7.widget.RecyclerView-->
@@ -17,6 +18,7 @@
             android:layout_height="fill_parent"
             android:layout_marginTop="12dp"
             android:padding="12dp"
+            android:background="@color/bg_list"
             android:divider="@android:color/transparent"
             android:dividerHeight="4dp"/>
 

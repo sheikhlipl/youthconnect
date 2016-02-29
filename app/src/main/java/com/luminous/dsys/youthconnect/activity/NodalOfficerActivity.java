@@ -368,8 +368,8 @@ public class NodalOfficerActivity extends BaseActivity
             String docPurpose = (String) document.getProperty(BuildConfigYouthConnect.DOC_PURPOSE);
             String updated_time_stamp = (String) document.getProperty(BuildConfigYouthConnect.DOC_CREATED);
 
-            Long timeStamp = Long.parseLong(updated_time_stamp);
-            String postDate = Util.getDateAndTimeFromTimeStamp(timeStamp);
+            //Long timeStamp = Long.parseLong(updated_time_stamp);
+            String postDate = updated_time_stamp;
             String user_name = (String) document.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME);
             int created_by_user_id = (Integer) document.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_ID);
             int is_uploaded = (Integer) document.getProperty(BuildConfigYouthConnect.DOC_IS_UPLOADED);

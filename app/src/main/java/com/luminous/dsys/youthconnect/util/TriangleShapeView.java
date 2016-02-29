@@ -32,7 +32,7 @@ public class TriangleShapeView extends View {
 
         Path path = new Path();
         path.moveTo( w, 0);
-        path.lineTo( 2 * w , 0);
+        path.lineTo( 1 * w , 0);
         path.lineTo( 2 * w , w);
         path.lineTo( w , 0);
         path.close();

@@ -15,7 +15,7 @@ public class BuildConfigYouthConnect {
     private static final String LOCAL_SYNC_URL = "http://192.168.1.107:4984";
     private static final String LIVE_SYNC_URL = "http://45.114.50.54:4984";
     private static final String DATABASE_NAME = "youth_connect";
-    public static final String SYNC_URL_HTTP = LOCAL_SYNC_URL + "/" + DATABASE_NAME;
+    public static final String SYNC_URL_HTTP = LIVE_SYNC_URL + "/" + DATABASE_NAME;
     public static final String SYNC_URL_HTTPS = "";
     private static final String TAG = "DatabaseUtil";
 

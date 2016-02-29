@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#fafafa"
+    android:background="@color/bg_list"
     tools:context="com.luminousinfoways.rtimissystem.testingapp.ChildActivity">
 
     <android.support.design.widget.CoordinatorLayout
@@ -25,10 +25,14 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <com.luminous.dsys.youthconnect.swipemenu.SwipeMenuListView
+        <ListView
             android:id="@+id/listView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:paddingTop="@dimen/qa_list_margin"
+            android:divider="@android:color/transparent"
+            android:background="@color/bg_list"
+            android:descendantFocusability="beforeDescendants"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
     </android.support.design.widget.CoordinatorLayout>

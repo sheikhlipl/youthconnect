@@ -1,12 +1,10 @@
 package com.luminous.dsys.youthconnect.qa;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -92,7 +90,7 @@ public class QaListAdapter extends LiveQueryAdapter {
         TextView tvQusByUserName = (TextView) convertView.findViewById(R.id.tvQusByUserName);
         tvQusByUserName.setText((String) task.getProperty(BuildConfigYouthConnect.QA_ASKED_BY_USER_NAME));
 
-        TextView tvTime = (TextView) convertView.findViewById(R.id.tvTime);
+        TextView tvTime = (TextView) convertView.findViewById(R.id.tvUserName);
         try {
             tvTime.setText(getTimeToShow((String) task.getProperty(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP)));
         } catch(Exception exception){
@@ -114,7 +112,7 @@ public class QaListAdapter extends LiveQueryAdapter {
 
             LinearLayout layoutAnswerList = (LinearLayout) convertView.findViewById(R.id.layoutAnswerList);
             layoutAnswerList.removeAllViews();
-            QuestionAndAnswer questionAndAnswer = QAAnsweredActivity.getQAFromDocument(task);
+            QuestionAndAnswer questionAndAnswer = QAUtil.getQAFromDocument(task);
             if(questionAndAnswer != null) {
                 List<Answer> answerList = questionAndAnswer.getAnswerList();
                 if (answerList != null && answerList.size() > 0) {
