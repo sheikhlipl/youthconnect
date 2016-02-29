@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
 import com.luminous.dsys.youthconnect.database.DBHelper;
@@ -48,6 +49,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * Created by luminousinfoways on 08/12/15.
  */
@@ -68,6 +71,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
     }
+
 
     @Override
     public void onClick(View view) {
