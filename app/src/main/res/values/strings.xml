@@ -31,4 +31,12 @@
     <string name="activity_attach_file_title">Attach File</string>
     <string name="activity_doc_list_title">Documents</string>
     <string name="activity_nodal_officers_list_title">Nodal Officers</string>
+    <string name="activity_change_password_title">Change Password</string>
+    <string name="remove_photo">REMOVE</string>
+    <string name="change_photo">CHANGE</string>
+    <string name="submit">SUBMIT</string>
+    <string name="password_changed_title">Password Changed</string>
+    <string name="password_changed_description">Your password has been changed.\nPlease logout and login again to get your app work.</string>
+    <string name="password_validation_msg">New password must contain at least one number (0-9),\nOne lowercase letter (a-z),\nOne uppercase letter (A-Z)\nand 1 Special char, between 6 to 15 chars !</string>
+    <string name="ast"><![CDATA[<font fgcolor="red">*</font>]]></string>
 </resources>

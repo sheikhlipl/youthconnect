@@ -196,7 +196,7 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
         public void onBindViewHolder(RecyclerView.ViewHolder rawHolder, int position) {
             ItemViewHolder holder = (ItemViewHolder) rawHolder;
 
-            holder.img.setImageResource(R.drawable.ic_menu_send);
+            holder.img.setImageResource(R.drawable.ic_get_app_black);
             holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
             holder.img.setTag(position);
             holder.progressBar.setTag(position);
@@ -213,7 +213,7 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
             if (_file.exists()) {
                 holder.progressBar.setVisibility(View.INVISIBLE);
                 holder.img.setVisibility(View.VISIBLE);
-                setImage(_file, holder);
+                setImage(_file, holder, position);
             } else {
                 if(Util.getNetworkConnectivityStatus(context)) {
                     BgAsync async = new BgAsync(position, holder, context, doc_id);
@@ -356,11 +356,11 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
 
                 viewHolder.progressBar.setVisibility(View.INVISIBLE);
                 viewHolder.img.setVisibility(View.VISIBLE);
-                setImage(file, viewHolder);
+                setImage(file, viewHolder, index);
             }
         }
 
-        private void setImage(File file, ItemViewHolder viewHolder) {
+        private void setImage(File file, ItemViewHolder viewHolder, int position) {
             if (file == null || file.getAbsolutePath() == null) {
                 return;
             }
@@ -378,53 +378,58 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
 
                 if (bitmap != null) {
                     viewHolder.img.setImageBitmap(bitmap);
-                } else {
-                    viewHolder.img.setImageResource(R.drawable.ic_file_download);
-                    viewHolder.img.setBackgroundResource(R.color.blue);
-                }
 
-                viewHolder.img.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //Open Image
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        File file = new File(filePath);
-                        String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
-                        String mimetype = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                        if (extension.equalsIgnoreCase("") || mimetype == null) {
-                            // if there is no extension or there is no definite mimetype, still try to open the file
-                            intent.setDataAndType(Uri.fromFile(file), "image/*");
-                        } else {
-                            intent.setDataAndType(Uri.fromFile(file), mimetype);
-                        }
+                    viewHolder.img.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            //Open Image
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            File file = new File(filePath);
+                            String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
+                            String mimetype = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                            if (extension.equalsIgnoreCase("") || mimetype == null) {
+                                // if there is no extension or there is no definite mimetype, still try to open the file
+                                intent.setDataAndType(Uri.fromFile(file), "image/*");
+                            } else {
+                                intent.setDataAndType(Uri.fromFile(file), mimetype);
+                            }
 
-                        // custom message for the intent
-                        Intent appIntent = Intent.createChooser(intent, "Choose an Application:");
-                        if (appIntent != null) {
-                            context.startActivity(appIntent);
-                        } else {
-                            if (context != null && context instanceof MainActivity) {
-                                AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context, R.style.AppCompatAlertDialogStyle);
-                                builder.setTitle(context.getResources().getString(R.string.no_app_found_title));
-                                builder.setMessage(context.getResources().getString(R.string.no_app_found_message));
-                                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                                builder.show();
+                            // custom message for the intent
+                            Intent appIntent = Intent.createChooser(intent, "Choose an Application:");
+                            if (appIntent != null) {
+                                context.startActivity(appIntent);
+                            } else {
+                                if (context != null && context instanceof MainActivity) {
+                                    AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context, R.style.AppCompatAlertDialogStyle);
+                                    builder.setTitle(context.getResources().getString(R.string.no_app_found_title));
+                                    builder.setMessage(context.getResources().getString(R.string.no_app_found_message));
+                                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                                    builder.show();
+                                }
                             }
                         }
+                    });
+                } else {
+                    viewHolder.img.setImageResource(R.drawable.ic_get_app_black);
+                    viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+
+                    if(Util.getNetworkConnectivityStatus(context)) {
+                        BgAsync async = new BgAsync(position, viewHolder, context, doc_id);
+                        async.execute();
                     }
-                });
+                }
             } else if (filePath != null && filePath.length() > 0
                     && ((filePath.contains("mp4")) ||
                     (filePath.contains("flv")) ||
                     (filePath.contains("3gp")) ||
                     (filePath.contains("avi")))) {
-                viewHolder.img.setImageResource(R.drawable.ic_action_play_over_video);
-                viewHolder.img.setBackgroundResource(R.color.blue);
+                viewHolder.img.setImageResource(R.drawable.ic_play_circle_outline_black);
+                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
                 viewHolder.img.setPadding(12, 12, 12, 12);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
@@ -465,8 +470,8 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
 
             } else {
 
-                viewHolder.img.setImageResource(R.drawable.ic_insert_drive_file);
-                viewHolder.img.setBackgroundResource(R.color.blue);
+                viewHolder.img.setImageResource(R.drawable.ic_open_in_new_black);
+                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
                     @Override

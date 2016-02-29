@@ -4,12 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/layoutParent"
+    android:background="@color/bg_list"
     tools:context="com.luminousinfoways.bloodbank.fragment.AllDonorListFragment">
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_refresh_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <!--<android.support.v4.widget.SwipeRefreshLayout-->
+        <!--android:id="@+id/swipe_refresh_layout"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content">-->
 
         <ScrollView
             android:layout_width="match_parent"
@@ -34,7 +35,7 @@
                         android:id="@+id/tvQuestionsAnswered"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="23"
+                        android:text="0"
                         android:textStyle="bold"
                         android:textAppearance="?android:textAppearanceLarge"
                         android:textColor="@color/white"/>
@@ -62,7 +63,7 @@
                         android:id="@+id/tvPendingQuestions"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="28"
+                        android:text="0"
                         android:textStyle="bold"
                         android:textAppearance="?android:textAppearanceLarge"
                         android:textColor="@color/white"/>
@@ -90,7 +91,7 @@
                         android:id="@+id/tvShowcaseEvents"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="22"
+                        android:text="0"
                         android:textStyle="bold"
                         android:textAppearance="?android:textAppearanceLarge"
                         android:textColor="@color/white"/>
@@ -118,7 +119,7 @@
                         android:id="@+id/tvDocuments"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="3"
+                        android:text="0"
                         android:textStyle="bold"
                         android:textAppearance="?android:textAppearanceLarge"
                         android:textColor="@color/white"/>
@@ -133,5 +134,5 @@
 
             </LinearLayout>
         </ScrollView>
-    </android.support.v4.widget.SwipeRefreshLayout>
+    <!--</android.support.v4.widget.SwipeRefreshLayout>-->
 </FrameLayout>

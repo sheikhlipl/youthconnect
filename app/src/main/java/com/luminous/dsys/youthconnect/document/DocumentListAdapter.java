@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -26,7 +25,6 @@ import com.couchbase.lite.LiveQuery;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
 import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
-import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Util;
 
@@ -85,7 +83,7 @@ public class DocumentListAdapter extends LiveQueryAdapter {
         TextView tvQusByUserName = (TextView) convertView.findViewById(R.id.tvQusByUserName);
         tvQusByUserName.setText((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME));
 
-        TextView tvTime = (TextView) convertView.findViewById(R.id.tvTime);
+        TextView tvTime = (TextView) convertView.findViewById(R.id.tvUserName);
         try {
             tvTime.setText(getTimeToShow((String) task.getProperty(BuildConfigYouthConnect.DOC_CREATED)));
         } catch(Exception exception){

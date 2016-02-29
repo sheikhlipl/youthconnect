@@ -47,15 +47,6 @@ public class MainActivity extends BaseActivity
 
         setContentView(R.layout.activity_main);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -188,10 +179,9 @@ public class MainActivity extends BaseActivity
         } else if (id == R.id.documentation) {
             Intent intent = new Intent(this, DocListActivity.class);
             startActivity(intent);
-        } else if (id == R.id.feedback) {
-
-        } else if (id == R.id.change_password) {
-
+        }  else if (id == R.id.change_password) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         } else if (id == R.id.logout) {
             showAlertDialog("Are you sure want to logout?", "Logout", "Yes", "No");
         }

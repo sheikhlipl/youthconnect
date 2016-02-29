@@ -1,0 +1,158 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:fitsSystemWindows="true"
+    android:background="@color/bg_list"
+    tools:context="com.luminousinfoways.sportsnyouth.sportsyouth.activity.SettingsActivity">
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/coordinatorLayout">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:layout_scrollFlags="scroll|enterAlways"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark"/>
+
+        </android.support.design.widget.AppBarLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/card_view"
+                android:layout_gravity="center"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/qa_list_margin"
+                card_view:cardCornerRadius="2dp"
+                card_view:contentPadding="10dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/settings_change_password_layout_margin"
+                    android:id="@+id/layout_change_password_fields"
+                    android:orientation="vertical">
+
+                    <com.rengwuxian.materialedittext.MaterialEditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Previous Password"
+                        android:id="@+id/etPrvPassword"
+                        android:singleLine="true"
+                        android:inputType="textPassword"
+                        app:met_floatingLabelTextColor="@android:color/black"
+                        app:met_floatingLabel="highlight"
+                        app:met_errorColor="@color/red"
+                        app:met_typeface="font/roboto_light.ttf"
+                        app:met_iconPadding="0dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="10dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"/>
+
+                    <com.rengwuxian.materialedittext.MaterialEditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="New Password"
+                        android:id="@+id/etCrntPassword"
+                        android:singleLine="true"
+                        android:inputType="textPassword"
+                        app:met_floatingLabelTextColor="@android:color/black"
+                        app:met_floatingLabel="highlight"
+                        app:met_errorColor="@color/red"
+                        app:met_typeface="font/roboto_light.ttf"
+                        app:met_iconPadding="0dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="10dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"/>
+
+                    <com.rengwuxian.materialedittext.MaterialEditText
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Confirm Password"
+                        android:id="@+id/etCrntConfirmPassword"
+                        android:singleLine="true"
+                        android:inputType="textPassword"
+                        app:met_floatingLabelTextColor="@android:color/black"
+                        app:met_floatingLabel="highlight"
+                        app:met_errorColor="@color/red"
+                        app:met_typeface="font/roboto_light.ttf"
+                        app:met_iconPadding="0dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="10dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/layout_change_password_fields"
+                    android:layout_alignLeft="@+id/layout_change_password_fields"
+                    android:layout_alignRight="@+id/layout_change_password_fields">
+
+                    <Button
+                        android:layout_centerHorizontal="true"
+                        android:id="@+id/btnReset"
+                        android:layout_gravity="left"
+                        android:background="@drawable/button_selector_qa"
+                        android:textColor="@color/qa_text_color"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="36dp"
+                        android:layout_weight="1"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        android:hint="Reset"/>
+
+                    <Button
+                        android:id="@+id/btnChange"
+                        android:layout_gravity="right"
+                        android:layout_weight="1"
+                        android:background="@drawable/button_selector_qa"
+                        android:textColor="@color/qa_text_color"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        android:hint="Change"/>
+                </LinearLayout>
+
+                </RelativeLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_centerInParent="true"/>
+
+        </RelativeLayout>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+</RelativeLayout>
