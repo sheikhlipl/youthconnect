@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -21,12 +22,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.couchbase.lite.Attachment;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
 import com.luminous.dsys.youthconnect.activity.NodalOfficerActivity;
+import com.luminous.dsys.youthconnect.helper.ImageHelper;
 import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
@@ -34,6 +37,7 @@ import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,6 +62,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
     private OnUpdateClickListenr onUpdateClickListenr;
     private HashMap<Integer, Boolean> mSelection = new HashMap<Integer, Boolean>();
     private static final String TAG = "DocList";
+    private static final int THUMBNAIL_SIZE_PX = 150;
 
     public DocumentListAdapter1(Context context, LiveQuery liveQuery,
                                 OnDeleteClickListener onDeleteClickListener,
@@ -329,7 +334,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
             for (String fileName : fileNameList) {
                 fileName.trim().replace(" ", "%20");
             }
-            horizontalAdapter.setData(fileNameList, context);
+            horizontalAdapter.setData(fileNameList, context, task);
             horizontalAdapter.setRowIndex(position);
         }
 
@@ -348,12 +353,13 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
         private int mRowIndex = -1;
         private Context context;
         private String doc_id;
+        private Document document;
 
         public HorizontalAdapter(String doc_id) {
             this.doc_id = doc_id;
         }
 
-        public void setData(List<String> data, Context context) {
+        public void setData(List<String> data, Context context, Document document) {
             if (mDataList != data) {
                 mDataList = data;
                 notifyDataSetChanged();
@@ -361,6 +367,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
                 mDataList = new ArrayList<String>();
             }
             this.context = context;
+            this.document = document;
         }
 
         public void setRowIndex(int index) {
@@ -391,30 +398,53 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
         public void onBindViewHolder(RecyclerView.ViewHolder rawHolder, int position) {
             ItemViewHolder holder = (ItemViewHolder) rawHolder;
 
-            holder.img.setImageResource(R.drawable.ic_get_app_black);
-            holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+            //holder.img.setImageResource(R.drawable.ic_get_app_black);
+            //holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
             holder.img.setTag(position);
             holder.progressBar.setTag(position);
+            holder.progressBar.setVisibility(View.GONE);
 
-            String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/youth_connect";
-            File dir = new File(fullPath);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            OutputStream fOut = null;
-            String filename = mDataList.get(position);
-            filename = filename.trim().replace(" ", "%20");
-            File _file = new File(fullPath, filename);
-             if (_file.exists()) {
-                holder.progressBar.setVisibility(View.INVISIBLE);
-                holder.img.setVisibility(View.VISIBLE);
-                setImage(_file, holder, position);
-            } else {
-                if(Util.getNetworkConnectivityStatus(context)) {
-                    BgAsync async = new BgAsync(position, holder, context, doc_id);
-                    async.execute();
+            String file_name = mDataList.get(position);
+            /*Video*/
+            if (file_name != null && file_name.length() > 0){
+                    /*&& ((file_name.contains("mp4")) ||
+                    (file_name.contains("flv")) ||
+                    (file_name.contains("mkv")) ||
+                    (file_name.contains("mp3")) ||
+                    (file_name.contains("3gp")) ||
+                    (file_name.contains("avi")) ||
+                    (file_name.contains("amr")))){*/
+                File file = getFileFromAttachment(document, file_name);
+                if(file != null) {
+                    holder.progressBar.setVisibility(View.GONE);
+                    setImage(file, holder, position);
                 } else{
-                    Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show();
+                    if(Util.getNetworkConnectivityStatus(context)) {
+                        BgAsync async = new BgAsync(position, holder, context, doc_id);
+                        async.execute();
+                    } else{
+                        Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            /* Image */
+            if (file_name != null && file_name.length() > 0
+                    && ((file_name.contains("jpg")) ||
+                    (file_name.contains("jpeg")) ||
+                    (file_name.contains("bmp")) ||
+                    (file_name.contains("png")))) {
+                Bitmap bitmap = getBitmapFromAttachment(document, position);
+                if(bitmap != null){
+                    holder.progressBar.setVisibility(View.GONE);
+                    holder.img.setImageBitmap(bitmap);
+                } else{
+                    if(Util.getNetworkConnectivityStatus(context)) {
+                        BgAsync async = new BgAsync(position, holder, context, doc_id);
+                        async.execute();
+                    } else{
+                        Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         }
@@ -568,7 +598,9 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
                     (filePath.contains("png")))) {
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                options.inDither = true;
                 Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
 
                 if (bitmap != null) {
@@ -609,15 +641,20 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
                             }
                         }
                     });
-                } else {
+                } /*else {
                     viewHolder.img.setImageResource(R.drawable.ic_get_app_black);
                     viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
-
-                    if(Util.getNetworkConnectivityStatus(context)) {
-                        BgAsync async = new BgAsync(position, viewHolder, context, doc_id);
-                        async.execute();
-                    }
-                }
+                    viewHolder.img.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if(Util.getNetworkConnectivityStatus(context)) {
+                                int pos = (Integer) v.get;
+                                BgAsync async = new BgAsync(pos, viewHolder, context, doc_id);
+                                async.execute();
+                            }
+                        }
+                    });
+                }*/
             } else if (filePath != null && filePath.length() > 0
                     && ((filePath.contains("mp4")) ||
                     (filePath.contains("flv")) ||
@@ -824,4 +861,80 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
     public interface OnUpdateClickListenr{
         public void onUpdateClick(Document student);
     }
+
+    private static Bitmap getBitmapFromAttachment(Document document, int position){
+
+        if(document == null){
+            return null;
+        }
+
+        Bitmap thumbnail = null;
+        java.util.List<Attachment> attachments = document.getCurrentRevision().getAttachments();
+        if (attachments != null && attachments.size() > 0) {
+            Attachment attachment = attachments.get(0);
+            try {
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeStream(attachment.getContent(), null, options);
+                options.inSampleSize = ImageHelper.calculateInSampleSize(
+                        options, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX);
+                attachment.getContent().close();
+
+                // Need to get a new attachment again as the FileInputStream
+                // doesn't support mark and reset.
+                attachments = document.getCurrentRevision().getAttachments();
+                attachment = attachments.get(position);
+                options.inJustDecodeBounds = false;
+                Bitmap bitmap = BitmapFactory.decodeStream(attachment.getContent(), null, options);
+                int w = bitmap.getWidth();
+                int h = bitmap.getHeight();
+                thumbnail = ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX);
+                attachment.getContent().close();
+            } catch (Exception e) {
+                com.couchbase.lite.util.Log.e(TAG, "Cannot decode the attached image", e);
+            }
+        }
+
+        return thumbnail;
+    }
+
+    private static File getFileFromAttachment(Document document, String file_name){
+
+        if(document == null || file_name == null){
+            return null;
+        }
+
+        Bitmap thumbnail = null;
+        File file = null;
+        java.util.List<Attachment> attachments = document.getCurrentRevision().getAttachments();
+        if (attachments != null && attachments.size() > 0) {
+            Attachment attachment = attachments.get(0);
+            try {
+                InputStream inputStream = attachment.getContent();
+                String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/youth_connect";
+                file = new File(fullPath, file_name);
+                attachment.getContent().close();
+            } catch (Exception e) {
+                com.couchbase.lite.util.Log.e(TAG, "Cannot decode the attached image", e);
+            }
+        }
+
+        return file;
+    }
+
+    private void copyInputStreamToFile( InputStream in, File file ) {
+        try {
+            OutputStream out = new FileOutputStream(file);
+            byte[] buf = new byte[1024];
+            int len;
+            while((len=in.read(buf))>0){
+                out.write(buf,0,len);
+            }
+            out.close();
+            in.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
