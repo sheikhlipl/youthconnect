@@ -3,6 +3,7 @@ package com.luminous.dsys.youthconnect.activity;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -17,6 +18,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -27,6 +29,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -555,12 +558,14 @@ public class AttachFileActivity extends BaseActivity
                         // the user clicked on colors[which]
                         switch (which) {
                             case 0:
+                                showHideMenu();
                                 Intent intentVideo = new Intent();
                                 intentVideo.setType("video/*");
                                 intentVideo.setAction(Intent.ACTION_GET_CONTENT);
                                 startActivityForResult(Intent.createChooser(intentVideo, "Select video"), PICK_VIDEO_REQUEST);
                                 break;
                             case 1:
+                                showHideMenu();
                                 Intent intentImage = new Intent();
                                 intentImage.setType("image/*");
                                 intentImage.setAction(Intent.ACTION_GET_CONTENT);
@@ -581,18 +586,21 @@ public class AttachFileActivity extends BaseActivity
                 recordVideo();
                 break;
             case R.id.imgAudio:
+                showHideMenu();
                 Intent intentImage = new Intent();
                 intentImage.setType("audio/*");
                 intentImage.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intentImage, "Select audio"), PICK_AUDIO_REQUEST);
                 break;
             case R.id.imgDoc:
+                showHideMenu();
                 Intent intentDoc = new Intent();
                 intentDoc.setType("file/*");
                 intentDoc.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intentDoc, "Select document"), PICK_DOC_REQUEST);
                 break;
             case R.id.imgMicrophone:
+                showHideMenu();
                 Intent intent =
                         new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
                 startActivityForResult(intent, RQS_RECORDING);
@@ -630,6 +638,48 @@ public class AttachFileActivity extends BaseActivity
         return type;
     }
 
+    private boolean fileSizeLessThanMaxFileSizeLimit(Intent data, boolean isCameraCaptureImageRequest){
+
+        String fileSize = "";
+        if(isCameraCaptureImageRequest){
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            Uri uri = getImageUri(this, photo);
+            fileSize = calculateFileSize(uri);
+        } else {
+            Uri uri = data.getData();
+            fileSize = calculateFileSize(uri);
+        }
+        Log.i(TAG, "FileSize : "+fileSize);
+        if(fileSize != null && fileSize.length() > 0
+                && TextUtils.isDigitsOnly(fileSize)){
+            int size = Integer.parseInt(fileSize);
+            if(size < 6){
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    public String calculateFileSize(Uri filepath)
+    {
+        //String filepathstr=filepath.toString();
+        String file_path = getRealPathFromURI(filepath);
+        File file = new File(file_path);
+
+        // Get length of file in bytes
+        long fileSizeInBytes = file.length();
+        // Convert the bytes to Kilobytes (1 KB = 1024 Bytes)
+        long fileSizeInKB = fileSizeInBytes / 1024;
+        // Convert the KB to MegaBytes (1 MB = 1024 KBytes)
+        long fileSizeInMB = fileSizeInKB / 1024;
+
+        String calString=Long.toString(fileSizeInMB);
+        return calString;
+    }
+
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -637,6 +687,29 @@ public class AttachFileActivity extends BaseActivity
         mRevealView = (LinearLayout) findViewById(R.id.reveal_items);
         mRevealView.setVisibility(View.INVISIBLE);
         isFromActivityResult = true;
+        if(data == null){
+            return;
+        }
+
+        boolean isCameraCaptureImageRequest = false;
+        if(requestCode == CAMERA_CAPTURE_IMAGE_REQUEST_CODE){
+            isCameraCaptureImageRequest = true;
+        }
+        if(fileSizeLessThanMaxFileSizeLimit(data, isCameraCaptureImageRequest) == false){
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+            builder.setTitle("File Upload");
+            builder.setMessage("Sorry, exceeds file size limit.");
+            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.show();
+
+            return;
+        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
         builder.setTitle("File Upload");
@@ -657,7 +730,6 @@ public class AttachFileActivity extends BaseActivity
                     String filename = filePathForImage.substring(filePathForImage.lastIndexOf("/") + 1);
                     fileToUpload.setFile_name(filename);
                     fileToUpload.setMime_type(getMimeTypeFromUri(selectedImageUri));
-
                 } else if (requestCode == PICK_VIDEO_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
 
                     Uri selectedVideoUri = data.getData();
@@ -745,7 +817,7 @@ public class AttachFileActivity extends BaseActivity
             }
         });
 
-        if(resultCode == RESULT_OK){
+        if(resultCode == RESULT_OK) {
             builder.show();
         }
     }
@@ -949,6 +1021,7 @@ public class AttachFileActivity extends BaseActivity
         // Check Camera
         if (getApplicationContext().getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_CAMERA)) {
+            showHideMenu();
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
         } else {
@@ -957,6 +1030,7 @@ public class AttachFileActivity extends BaseActivity
     }
 
     private void recordVideo() {
+        showHideMenu();
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
         startActivityForResult(intent, CAMERA_CAPTURE_VIDEO_REQUEST_CODE);
@@ -1045,74 +1119,7 @@ public class AttachFileActivity extends BaseActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_attach) {
-            int cx = (mRevealView.getLeft() + mRevealView.getRight());
-//                int cy = (mRevealView.getTop() + mRevealView.getBottom())/2;
-            int cy = mRevealView.getTop();
-
-            int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-
-                SupportAnimator animator =
-                        ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
-                animator.setInterpolator(new AccelerateDecelerateInterpolator());
-                animator.setDuration(800);
-
-                SupportAnimator animator_reverse = animator.reverse();
-
-                if (hidden) {
-                    mRevealView.setVisibility(View.VISIBLE);
-                    animator.start();
-                    hidden = false;
-                } else {
-                    animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart() {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd() {
-                            mRevealView.setVisibility(View.INVISIBLE);
-                            hidden = true;
-
-                        }
-
-                        @Override
-                        public void onAnimationCancel() {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat() {
-
-                        }
-                    });
-                    animator_reverse.start();
-
-                }
-            } else {
-                if (hidden) {
-                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
-                    mRevealView.setVisibility(View.VISIBLE);
-                    anim.start();
-                    hidden = false;
-
-                } else {
-                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
-                    anim.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            mRevealView.setVisibility(View.INVISIBLE);
-                            hidden = true;
-                        }
-                    });
-                    anim.start();
-
-                }
-            }
-
+            showHideMenu();
             return true;
         } else if(id == android.R.id.home){
             onBackPressed();
@@ -1121,10 +1128,80 @@ public class AttachFileActivity extends BaseActivity
         return super.onOptionsItemSelected(item);
     }
 
+    private void showHideMenu(){
+        int cx = (mRevealView.getLeft() + mRevealView.getRight());
+//                int cy = (mRevealView.getTop() + mRevealView.getBottom())/2;
+        int cy = mRevealView.getTop();
+
+        int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+
+            SupportAnimator animator =
+                    ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+            animator.setInterpolator(new AccelerateDecelerateInterpolator());
+            animator.setDuration(800);
+
+            SupportAnimator animator_reverse = animator.reverse();
+
+            if (hidden) {
+                mRevealView.setVisibility(View.VISIBLE);
+                animator.start();
+                hidden = false;
+            } else {
+                animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart() {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd() {
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+
+                    }
+
+                    @Override
+                    public void onAnimationCancel() {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat() {
+
+                    }
+                });
+                animator_reverse.start();
+
+            }
+        } else {
+            if (hidden) {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+                mRevealView.setVisibility(View.VISIBLE);
+                anim.start();
+                hidden = false;
+
+            } else {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
+                anim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+                    }
+                });
+                anim.start();
+
+            }
+        }
+    }
+
     private void onActionDoneClick(){
 
         EditText editTextTitle = (EditText) findViewById(R.id.editTextTitle);
-        String title = editTextTitle.getText().toString().trim();
+        final String title = editTextTitle.getText().toString().trim();
 
         if(title == null || title.trim().length() <= 0){
             AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
@@ -1141,17 +1218,8 @@ public class AttachFileActivity extends BaseActivity
             return;
         }
 
-        String doc_created_by_user_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getString(Constants.SP_USER_NAME, "");
-        int doc_created_by_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_ID, 0);
-        List<AssignedToUSer> assigned_to_user_list = new ArrayList<AssignedToUSer>();
-
-        int userid = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_ID, 0);
-        String username = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getString(Constants.SP_USER_NAME, "");
-
-        AssignedToUSer assignedToUSer = new AssignedToUSer();
-        assignedToUSer.setUser_id(userid);
-        assignedToUSer.setUser_name(username);
-        assigned_to_user_list.add(assignedToUSer);
+        final String doc_created_by_user_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getString(Constants.SP_USER_NAME, "");
+        final int doc_created_by_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_ID, 0);
 
         if(fileToUploads == null || fileToUploads.size() <= 0){
             AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
@@ -1168,33 +1236,63 @@ public class AttachFileActivity extends BaseActivity
             return;
         }
 
-        List<String> fileNames = new ArrayList<String>();
-        if(fileToUploads != null && fileToUploads.size() > 0) {
-            for (FileToUpload fileToUpload : fileToUploads) {
-                if (fileToUpload.getFile_name() != null) {
-                    fileNames.add(fileToUpload.getFile_name());
-                }
-            }
-        }
-
-        try {
-            createDocument(application.getDatabase(),
-                    title, "", doc_created_by_user_name, fileNames, fileToUploads, doc_created_by_user_id, assigned_to_user_list);
-        } catch(Exception exception){
-            Log.e(TAG, "onActivityResult()", exception);
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(AttachFileActivity.this, R.style.AppCompatAlertDialogStyle);
-        builder.setTitle("File attachment");
-        builder.setMessage("Done successfully.");
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        new AsyncTask<Void, Void, Void>(){
+            private ProgressDialog progressDialog = null;
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                finish();
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressDialog = ProgressDialog.show(AttachFileActivity.this, "File Attachment", "Attaching files...");
             }
-        });
-        builder.show();
+
+            @Override
+            protected Void doInBackground(Void... params) {
+
+                List<String> fileNames = new ArrayList<String>();
+                if(fileToUploads != null && fileToUploads.size() > 0) {
+                    for (FileToUpload fileToUpload : fileToUploads) {
+                        if (fileToUpload.getFile_name() != null) {
+                            fileNames.add(fileToUpload.getFile_name());
+                        }
+                    }
+                }
+
+                List<AssignedToUSer> assigned_to_user_list = new ArrayList<AssignedToUSer>();
+
+                int userid = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getInt(Constants.SP_USER_ID, 0);
+                String username = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0).getString(Constants.SP_USER_NAME, "");
+
+                AssignedToUSer assignedToUSer = new AssignedToUSer();
+                assignedToUSer.setUser_id(userid);
+                assignedToUSer.setUser_name(username);
+                assigned_to_user_list.add(assignedToUSer);
+
+                try {
+                    createDocument(application.getDatabase(),
+                            title, "", doc_created_by_user_name, fileNames, fileToUploads, doc_created_by_user_id, assigned_to_user_list);
+                } catch(Exception exception){
+                    Log.e(TAG, "onActivityResult()", exception);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                progressDialog.dismiss();
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(AttachFileActivity.this, R.style.AppCompatAlertDialogStyle);
+                builder.setTitle("File attachment");
+                builder.setMessage("Done successfully.");
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        finish();
+                    }
+                });
+                builder.show();
+            }
+        }.execute();
     }
 
     @Override

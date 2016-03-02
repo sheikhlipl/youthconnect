@@ -373,7 +373,9 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
                     (filePath.contains("png")))) {
 
                 BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                options.inDither = true;
                 Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
 
                 if (bitmap != null) {
