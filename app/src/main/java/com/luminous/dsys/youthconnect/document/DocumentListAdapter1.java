@@ -378,11 +378,13 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
 
             private ImageView img;
             private ProgressBar progressBar;
+            private TextView tvFileTitle;
 
             public ItemViewHolder(View itemView) {
                 super(itemView);
                 img = (ImageView) itemView.findViewById(R.id.imageView);
                 progressBar = (ProgressBar) itemView.findViewById(R.id.progressBar);
+                tvFileTitle = (TextView) itemView.findViewById(R.id.tvFileTitle);
             }
         }
 
@@ -405,7 +407,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
             holder.progressBar.setVisibility(View.GONE);
 
             String file_name = mDataList.get(position);
-            /*Video*/
+            /*Other files*/
             if (file_name != null && file_name.length() > 0){
                     /*&& ((file_name.contains("mp4")) ||
                     (file_name.contains("flv")) ||
@@ -414,6 +416,68 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
                     (file_name.contains("3gp")) ||
                     (file_name.contains("avi")) ||
                     (file_name.contains("amr")))){*/
+
+                String extension = Util.getFileExt(file_name);
+
+                if(extension.equalsIgnoreCase("mp3")
+                        || extension.equalsIgnoreCase("amr")
+                        || extension.equalsIgnoreCase("aa")
+                        || extension.equalsIgnoreCase("aac")
+                        || extension.equalsIgnoreCase("aax")
+                        || extension.equalsIgnoreCase("act")
+                        || extension.equalsIgnoreCase("aiff")
+                        || extension.equalsIgnoreCase("ape")
+                        || extension.equalsIgnoreCase("au")
+                        || extension.equalsIgnoreCase("awb")
+                        || extension.equalsIgnoreCase("dct")
+                        || extension.equalsIgnoreCase("dss")
+                        || extension.equalsIgnoreCase("dvf")
+                        || extension.equalsIgnoreCase("flac")
+                        || extension.equalsIgnoreCase("gsm")
+                        || extension.equalsIgnoreCase("iklax")
+                        || extension.equalsIgnoreCase("ivs")
+                        || extension.equalsIgnoreCase("m4a")
+                        || extension.equalsIgnoreCase("m4b")
+                        || extension.equalsIgnoreCase("m4p")
+                        || extension.equalsIgnoreCase("mmf")
+                        || extension.equalsIgnoreCase("mpc")
+                        || extension.equalsIgnoreCase("msv")
+                        || extension.equalsIgnoreCase("ogg")
+                        || extension.equalsIgnoreCase("oga")
+                        || extension.equalsIgnoreCase("wav")
+                        || extension.equalsIgnoreCase("3gp")){
+
+                        // audio
+                        holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                        holder.img.setPadding(10, 10, 10, 10);
+                        holder.img.setImageResource(R.drawable.ic_headset_white);
+                        holder.img.setBackgroundResource(R.drawable.circle_purple_for_audio_icon_bg);
+
+                } else if (((extension.equalsIgnoreCase("mp4")) ||
+                        (extension.equalsIgnoreCase("flv")) ||
+                        (extension.equalsIgnoreCase("3gp")) ||
+                        (extension.equalsIgnoreCase("avi")))){
+                    // Video
+                    holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                    holder.img.setPadding(10, 10, 10, 10);
+                    holder.img.setImageResource(R.drawable.ic_videocam_white);
+                    holder.img.setBackgroundResource(R.drawable.circle_purple_for_record_icon_bg);
+                } else if ( ((extension.equalsIgnoreCase("jpg")) ||
+                        (extension.equalsIgnoreCase("jpeg")) ||
+                        (extension.equalsIgnoreCase("bmp")) ||
+                        (extension.equalsIgnoreCase("png")))) {
+                    // Image
+                    holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                    holder.img.setPadding(10, 10, 10, 10);
+                    holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+                } else{
+                    // Document
+                    holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                    holder.img.setPadding(10, 10, 10, 10);
+                    holder.img.setImageResource(R.drawable.ic_insert_drive_file);
+                    holder.img.setBackgroundResource(R.drawable.circle_purple_for_doc_icon_bg);
+                }
+
                 File file = getFileFromAttachment(document, file_name);
                 if(file != null) {
                     holder.progressBar.setVisibility(View.GONE);
@@ -660,9 +724,9 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
                     (filePath.contains("flv")) ||
                     (filePath.contains("3gp")) ||
                     (filePath.contains("avi")))) {
-                viewHolder.img.setImageResource(R.drawable.ic_play_circle_outline_black);
-                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
-                viewHolder.img.setPadding(12, 12, 12, 12);
+                //viewHolder.img.setImageResource(R.drawable.ic_play_circle_outline_black);
+//                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+//                viewHolder.img.setPadding(12, 12, 12, 12);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -702,8 +766,8 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
 
             } else {
 
-                viewHolder.img.setImageResource(R.drawable.ic_open_in_new_black);
-                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+//                viewHolder.img.setImageResource(R.drawable.ic_open_in_new_black);
+//                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -936,5 +1000,4 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
             e.printStackTrace();
         }
     }
-
 }

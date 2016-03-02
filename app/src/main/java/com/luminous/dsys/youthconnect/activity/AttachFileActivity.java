@@ -558,12 +558,14 @@ public class AttachFileActivity extends BaseActivity
                         // the user clicked on colors[which]
                         switch (which) {
                             case 0:
+                                showHideMenu();
                                 Intent intentVideo = new Intent();
                                 intentVideo.setType("video/*");
                                 intentVideo.setAction(Intent.ACTION_GET_CONTENT);
                                 startActivityForResult(Intent.createChooser(intentVideo, "Select video"), PICK_VIDEO_REQUEST);
                                 break;
                             case 1:
+                                showHideMenu();
                                 Intent intentImage = new Intent();
                                 intentImage.setType("image/*");
                                 intentImage.setAction(Intent.ACTION_GET_CONTENT);
@@ -584,18 +586,21 @@ public class AttachFileActivity extends BaseActivity
                 recordVideo();
                 break;
             case R.id.imgAudio:
+                showHideMenu();
                 Intent intentImage = new Intent();
                 intentImage.setType("audio/*");
                 intentImage.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intentImage, "Select audio"), PICK_AUDIO_REQUEST);
                 break;
             case R.id.imgDoc:
+                showHideMenu();
                 Intent intentDoc = new Intent();
                 intentDoc.setType("file/*");
                 intentDoc.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intentDoc, "Select document"), PICK_DOC_REQUEST);
                 break;
             case R.id.imgMicrophone:
+                showHideMenu();
                 Intent intent =
                         new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
                 startActivityForResult(intent, RQS_RECORDING);
@@ -634,10 +639,6 @@ public class AttachFileActivity extends BaseActivity
     }
 
     private boolean fileSizeLessThanMaxFileSizeLimit(Intent data, boolean isCameraCaptureImageRequest){
-
-        if(data == null){
-            return false;
-        }
 
         String fileSize = "";
         if(isCameraCaptureImageRequest){
@@ -686,6 +687,9 @@ public class AttachFileActivity extends BaseActivity
         mRevealView = (LinearLayout) findViewById(R.id.reveal_items);
         mRevealView.setVisibility(View.INVISIBLE);
         isFromActivityResult = true;
+        if(data == null){
+            return;
+        }
 
         boolean isCameraCaptureImageRequest = false;
         if(requestCode == CAMERA_CAPTURE_IMAGE_REQUEST_CODE){
@@ -1017,6 +1021,7 @@ public class AttachFileActivity extends BaseActivity
         // Check Camera
         if (getApplicationContext().getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_CAMERA)) {
+            showHideMenu();
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
         } else {
@@ -1025,6 +1030,7 @@ public class AttachFileActivity extends BaseActivity
     }
 
     private void recordVideo() {
+        showHideMenu();
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
         startActivityForResult(intent, CAMERA_CAPTURE_VIDEO_REQUEST_CODE);
@@ -1113,80 +1119,83 @@ public class AttachFileActivity extends BaseActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_attach) {
-            int cx = (mRevealView.getLeft() + mRevealView.getRight());
-//                int cy = (mRevealView.getTop() + mRevealView.getBottom())/2;
-            int cy = mRevealView.getTop();
-
-            int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-
-                SupportAnimator animator =
-                        ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
-                animator.setInterpolator(new AccelerateDecelerateInterpolator());
-                animator.setDuration(800);
-
-                SupportAnimator animator_reverse = animator.reverse();
-
-                if (hidden) {
-                    mRevealView.setVisibility(View.VISIBLE);
-                    animator.start();
-                    hidden = false;
-                } else {
-                    animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart() {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd() {
-                            mRevealView.setVisibility(View.INVISIBLE);
-                            hidden = true;
-
-                        }
-
-                        @Override
-                        public void onAnimationCancel() {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat() {
-
-                        }
-                    });
-                    animator_reverse.start();
-
-                }
-            } else {
-                if (hidden) {
-                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
-                    mRevealView.setVisibility(View.VISIBLE);
-                    anim.start();
-                    hidden = false;
-
-                } else {
-                    Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
-                    anim.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            mRevealView.setVisibility(View.INVISIBLE);
-                            hidden = true;
-                        }
-                    });
-                    anim.start();
-
-                }
-            }
-
+            showHideMenu();
             return true;
         } else if(id == android.R.id.home){
             onBackPressed();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showHideMenu(){
+        int cx = (mRevealView.getLeft() + mRevealView.getRight());
+//                int cy = (mRevealView.getTop() + mRevealView.getBottom())/2;
+        int cy = mRevealView.getTop();
+
+        int radius = Math.max(mRevealView.getWidth(), mRevealView.getHeight());
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+
+            SupportAnimator animator =
+                    ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+            animator.setInterpolator(new AccelerateDecelerateInterpolator());
+            animator.setDuration(800);
+
+            SupportAnimator animator_reverse = animator.reverse();
+
+            if (hidden) {
+                mRevealView.setVisibility(View.VISIBLE);
+                animator.start();
+                hidden = false;
+            } else {
+                animator_reverse.addListener(new SupportAnimator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart() {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd() {
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+
+                    }
+
+                    @Override
+                    public void onAnimationCancel() {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat() {
+
+                    }
+                });
+                animator_reverse.start();
+
+            }
+        } else {
+            if (hidden) {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, 0, radius);
+                mRevealView.setVisibility(View.VISIBLE);
+                anim.start();
+                hidden = false;
+
+            } else {
+                Animator anim = android.view.ViewAnimationUtils.createCircularReveal(mRevealView, cx, cy, radius, 0);
+                anim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        mRevealView.setVisibility(View.INVISIBLE);
+                        hidden = true;
+                    }
+                });
+                anim.start();
+
+            }
+        }
     }
 
     private void onActionDoneClick(){
