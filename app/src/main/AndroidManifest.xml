@@ -20,6 +20,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <meta-data android:name="LOCALYTICS_APP_KEY" android:value="2c11a6a90a39249e0728ed6-226aa19a-dbe1-11e5-0e67-00cef1388a40"/>
         <activity
             android:name=".splash.SplashActivity"
             android:label="@string/app_name"
