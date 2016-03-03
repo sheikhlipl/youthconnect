@@ -37,7 +37,6 @@ import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -61,7 +60,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
     private OnDeleteClickListener onDeleteClickListener;
     private OnUpdateClickListenr onUpdateClickListenr;
     private HashMap<Integer, Boolean> mSelection = new HashMap<Integer, Boolean>();
-    private static final String TAG = "DocList";
+    private static final String TAG = "DocumentListAdapter";
     private static final int THUMBNAIL_SIZE_PX = 150;
 
     public DocumentListAdapter1(Context context, LiveQuery liveQuery,
@@ -933,7 +932,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
         }
 
         Bitmap thumbnail = null;
-        java.util.List<Attachment> attachments = document.getCurrentRevision().getAttachments();
+        List<Attachment> attachments = document.getCurrentRevision().getAttachments();
         if (attachments != null && attachments.size() > 0) {
             Attachment attachment = attachments.get(0);
             try {
@@ -970,7 +969,7 @@ public class DocumentListAdapter1 extends LiveQueryAdapter {
 
         Bitmap thumbnail = null;
         File file = null;
-        java.util.List<Attachment> attachments = document.getCurrentRevision().getAttachments();
+        List<Attachment> attachments = document.getCurrentRevision().getAttachments();
         if (attachments != null && attachments.size() > 0) {
             Attachment attachment = attachments.get(0);
             try {

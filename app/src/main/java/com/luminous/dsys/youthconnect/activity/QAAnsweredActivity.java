@@ -2,25 +2,17 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
-import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,13 +25,9 @@ import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
-import com.luminous.dsys.youthconnect.pojo.Question;
 import com.luminous.dsys.youthconnect.pojo.QuestionAndAnswer;
 import com.luminous.dsys.youthconnect.qa.QAUtil;
-import com.luminous.dsys.youthconnect.qa.QaListAdapter1;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenu;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuCreator;
-import com.luminous.dsys.youthconnect.swipemenu.SwipeMenuItem;
+import com.luminous.dsys.youthconnect.qa.QaListAdapter;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -50,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,15 +45,15 @@ import java.util.Map;
  * Created by luminousinfoways on 18/12/15.
  */
 public class QAAnsweredActivity extends BaseActivity implements
-        QaListAdapter1.OnDeleteClickListener, QaListAdapter1.OnUnPublishClickListenr,
-        QaListAdapter1.OnEditQuestionClickListenr, QaListAdapter1.OnAnswerClickListenr,
-        QaListAdapter1.OnEditAnswerClickListenr, QaListAdapter1.OnCommentClickListenr,
-        QaListAdapter1.OnPublishClickListenr,
+        QaListAdapter.OnDeleteClickListener, QaListAdapter.OnUnPublishClickListenr,
+        QaListAdapter.OnEditQuestionClickListenr, QaListAdapter.OnAnswerClickListenr,
+        QaListAdapter.OnEditAnswerClickListenr, QaListAdapter.OnCommentClickListenr,
+        QaListAdapter.OnPublishClickListenr,
         Replication.ChangeListener{
 
     private static final String TAG = "QAAnsweredActivity";
     private ListView mListView = null;
-    private QaListAdapter1 mAdapter = null;
+    private QaListAdapter mAdapter = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,7 +162,7 @@ public class QAAnsweredActivity extends BaseActivity implements
         if(currently_logged_in_user_id == 1){
             //User is Admin
             if(application.getQAAnsweredForAdminQuery(application.getDatabase()) != null) {
-                mAdapter = new QaListAdapter1(this, application.getQAAnsweredForAdminQuery
+                mAdapter = new QaListAdapter(this, application.getQAAnsweredForAdminQuery
                         (application.getDatabase()).toLiveQuery(),
                         this, this, this, this, this, this, this, false, false, true);
                 mListView.setAdapter(mAdapter);
@@ -183,7 +170,7 @@ public class QAAnsweredActivity extends BaseActivity implements
         } else{
             //User is nodal Officer
             if(application.getQAAnsweredForNodalQuery(application.getDatabase()) != null) {
-                mAdapter = new QaListAdapter1(this, application.getQAAnsweredForNodalQuery
+                mAdapter = new QaListAdapter(this, application.getQAAnsweredForNodalQuery
                         (application.getDatabase()).toLiveQuery(),
                         this, this, this, this, this, this, this, false, false, true);
                 mListView.setAdapter(mAdapter);

@@ -40,14 +40,6 @@
                  android:layout_alignParentRight="true"
                  android:layout_alignBottom="@+id/tvFileTitle"/>
 
-             <include layout="@layout/edit_and_comment"
-                 android:id="@+id/layout_comment"
-                 android:visibility="gone"
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:layout_alignParentRight="true"
-                 android:layout_below="@+id/imgDownArrow"/>
-
              <TextView
                  android:id="@+id/tvQusByUserName"
                  android:layout_width="wrap_content"
@@ -137,6 +129,14 @@
                  android:layout_marginTop="12dp"
                  android:layout_below="@+id/layoutComments"
                  android:hint="Post Here"/>
+
+             <include layout="@layout/edit_and_comment"
+                 android:id="@+id/layout_comment"
+                 android:visibility="gone"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_alignParentRight="true"
+                 android:layout_below="@+id/imgDownArrow"/>
 
              <!--<ImageView-->
                  <!--android:layout_width="40dp"-->
