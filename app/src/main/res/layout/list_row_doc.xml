@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:descendantFocusability="blocksDescendants">
+
+     <android.support.v7.widget.CardView
+        android:id="@+id/card_view"
+        android:layout_gravity="center"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/qa_list_margin"
+         android:layout_marginRight="@dimen/qa_list_margin"
+         android:layout_marginBottom="@dimen/qa_list_margin"
+        card_view:cardCornerRadius="2dp"
+        card_view:contentPadding="10dp">
+         <RelativeLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content">
+
+             <TextView
+                 android:id="@+id/tvFileTitle"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_margin="5dp"
+                 android:text="Document Title"
+                 android:textStyle="bold"
+                 android:layout_toLeftOf="@+id/imgDownArrow"
+                 android:textColor="@color/textColorPrimary"
+                 android:textSize="18sp" />
+
+             <ImageView
+                 android:id="@+id/imgDownArrow"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:src="@drawable/ic_keyboard_arrow_down"
+                 android:adjustViewBounds="true"
+                 android:scaleType="fitCenter"
+                 android:layout_alignParentRight="true"
+                 android:layout_alignBottom="@+id/tvFileTitle"/>
+
+             <TextView
+                 android:id="@+id/tvQusByUserName"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_below="@+id/tvFileTitle"
+                 android:layout_margin="5dp"
+                 android:text="User Name"
+                 android:textColor="@color/secondary_text_color"
+                 android:textSize="12sp" />
+
+             <TextView
+                 android:id="@+id/tvUserName"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_toRightOf="@+id/tvQusByUserName"
+                 android:layout_alignBaseline="@+id/tvQusByUserName"
+                 android:layout_margin="5dp"
+                 android:gravity="left"
+                 android:text="at 12:12 PM"
+                 android:textColor="@color/colorPrimary"
+                 android:textSize="12sp" />
+
+             <RelativeLayout
+                 android:id="@+id/layoutFileList"
+                 android:visibility="visible"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_marginTop="6dp"
+                 android:layout_below="@+id/tvQusByUserName">
+
+                 <android.support.v7.widget.RecyclerView
+                     android:id="@+id/item_horizontal_list"
+                     android:layout_width="match_parent"
+                     android:fadeScrollbars="true"
+                     android:layout_height="70dp"/>
+
+             </RelativeLayout>
+
+             <include layout="@layout/doc_menu_items"
+                 android:id="@+id/layout_comment"
+                 android:visibility="gone"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_alignParentRight="true"
+                 android:layout_below="@+id/imgDownArrow"/>
+
+         </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+</RelativeLayout>

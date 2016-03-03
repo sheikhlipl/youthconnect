@@ -11,7 +11,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -25,10 +24,9 @@ import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
-import com.luminous.dsys.youthconnect.pojo.Question;
 import com.luminous.dsys.youthconnect.pojo.QuestionAndAnswer;
 import com.luminous.dsys.youthconnect.qa.QAUtil;
-import com.luminous.dsys.youthconnect.qa.QaListAdapter1;
+import com.luminous.dsys.youthconnect.qa.QaListAdapter;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
@@ -39,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,15 +44,15 @@ import java.util.Map;
  * Created by luminousinfoways on 18/12/15.
  */
 public class QAPublishedActivity extends BaseActivity implements
-        QaListAdapter1.OnDeleteClickListener, QaListAdapter1.OnUnPublishClickListenr,
-        QaListAdapter1.OnEditQuestionClickListenr, QaListAdapter1.OnAnswerClickListenr,
-        QaListAdapter1.OnEditAnswerClickListenr, QaListAdapter1.OnCommentClickListenr,
-        QaListAdapter1.OnPublishClickListenr,
+        QaListAdapter.OnDeleteClickListener, QaListAdapter.OnUnPublishClickListenr,
+        QaListAdapter.OnEditQuestionClickListenr, QaListAdapter.OnAnswerClickListenr,
+        QaListAdapter.OnEditAnswerClickListenr, QaListAdapter.OnCommentClickListenr,
+        QaListAdapter.OnPublishClickListenr,
         Replication.ChangeListener{
 
     private static final String TAG = "QAPublishedActivity";
     private ListView mListView = null;
-    private QaListAdapter1 mAdapter = null;
+    private QaListAdapter mAdapter = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,7 +160,7 @@ public class QAPublishedActivity extends BaseActivity implements
     private void showListInListView() throws CouchbaseLiteException, IOException {
         mListView = (ListView) findViewById(R.id.listView);
         if(application.getQAPublishedForQuery(application.getDatabase()) != null) {
-            mAdapter = new QaListAdapter1(this, application.getQAPublishedForQuery
+            mAdapter = new QaListAdapter(this, application.getQAPublishedForQuery
                     (application.getDatabase()).toLiveQuery(),
                     this, this, this, this, this, this, this, true, false, false);
             mListView.setAdapter(mAdapter);
