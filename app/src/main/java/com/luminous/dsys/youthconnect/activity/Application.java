@@ -23,6 +23,7 @@ import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.crashlytics.android.Crashlytics;
 import com.google.api.client.http.HttpResponseException;
+import com.localytics.android.LocalyticsActivityLifecycleCallbacks;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
@@ -188,6 +189,8 @@ public class Application extends android.app.Application {
         super.onCreate();
 
         Fabric.with(this, new Crashlytics());
+        registerActivityLifecycleCallbacks(
+                new LocalyticsActivityLifecycleCallbacks(this));
 
         migrateOldVersion();
 
