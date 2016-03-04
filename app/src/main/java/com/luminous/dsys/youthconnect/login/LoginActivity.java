@@ -48,6 +48,7 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -57,6 +58,7 @@ import io.fabric.sdk.android.Fabric;
 public class LoginActivity extends Activity implements View.OnClickListener {
 
     private ProgressBar progressBar;
+    private static final String TAG = "LoginActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -373,6 +375,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                             user.setModified(modified);
                             //dbHelper.insertUser(user);
                         }
+
+                        registerPushBots();
 
                         //dbHelper.close();
                         return user;
@@ -699,5 +703,69 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     protected void onDestroy() {
         System.gc();
         super.onDestroy();
+    }
+
+    private void registerPushBots(){
+        try {
+            int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_ID, 0);
+            String push_bots_app_id = getResources().getString(R.string.pb_appid);
+            String push_bots_secret_id = getResources().getString(R.string.pb_secret_id);
+
+            InputStream in = null;
+            int resCode = -1;
+
+            String link = Constants.PUSH_REST_API_REGISTER_URL;
+            URL url = new URL(link);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("PUT");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setRequestProperty("content-type", "application/json");
+            conn.setRequestProperty("X-PUSHBOTS-APPID", push_bots_app_id);
+            conn.setRequestProperty("X-PUSHBOTS-SECRET", push_bots_secret_id);
+            conn.setAllowUserInteraction(false);
+            conn.setInstanceFollowRedirects(true);
+
+            Random random = new Random();
+            OutputStreamWriter osw = new OutputStreamWriter(conn.getOutputStream());
+            osw.write(String.format("{ \"platform\" : 1  , " +
+                            "\"alias\" : \"" + Integer.toString(currently_logged_in_user_id) + " }",
+                    random.nextInt(30), random.nextInt(20)));
+            osw.flush();
+            osw.close();
+
+            System.err.println(conn.getResponseCode() + "\n" + conn.getResponseMessage());
+            resCode = conn.getResponseCode();
+            if (resCode == HttpURLConnection.HTTP_OK) {
+                in = conn.getInputStream();
+            }
+            if(in == null){
+                return;
+            }
+            BufferedReader reader =new BufferedReader(new InputStreamReader(in, "UTF-8"));
+            String response = "",data="";
+
+            while ((data = reader.readLine()) != null){
+                response += data + "\n";
+            }
+
+            Log.i(TAG, "Response : " + response);
+
+            if(response != null && response.length() > 0){
+
+            }
+        } catch(SocketTimeoutException exception){
+            Log.e(TAG, "LoginAsync : doInBackground", exception);
+        } catch(ConnectException exception){
+            Log.e(TAG, "LoginAsync : doInBackground", exception);
+        } catch(MalformedURLException exception){
+            Log.e(TAG, "LoginAsync : doInBackground", exception);
+        } catch (IOException exception){
+            Log.e(TAG, "LoginAsync : doInBackground", exception);
+        } catch(Exception exception){
+            Log.e(TAG, "LoginAsync : doInBackground", exception);
+        }
     }
 }

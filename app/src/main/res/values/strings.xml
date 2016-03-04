@@ -39,4 +39,13 @@
     <string name="password_changed_description">Your password has been changed.\nPlease logout and login again to get your app work.</string>
     <string name="password_validation_msg">New password must contain at least one number (0-9),\nOne lowercase letter (a-z),\nOne uppercase letter (A-Z)\nand 1 Special char, between 6 to 15 chars !</string>
     <string name="ast"><![CDATA[<font fgcolor="red">*</font>]]></string>
+
+    <!-- Pushbots Application ID  -->
+    <string name="pb_appid">56d832b01779593a7d8b4567</string>
+    <!-- Pushbots Secret ID  -->
+    <string name="pb_secret_id">8410164200c83c658561530e3c8b66d5</string>
+    <!-- GCM Sender ID -->
+    <string name="pb_senderid">16925061759</string>
+    <!-- Pushbots Log Level  log Tag "PB2" -->
+    <string name="pb_logLevel">DEBUG</string>
 </resources>

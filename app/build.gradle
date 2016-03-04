@@ -65,4 +65,7 @@ dependencies {
     compile 'com.github.ozodrukh:CircularReveal:1.1.0'
     compile 'com.jakewharton:butterknife:6.0.0'
     compile files('libs/localytics.jar')
+
+    // Pushbots
+    compile 'com.pushbots:pushbots-lib:2.0.13@aar'
 }

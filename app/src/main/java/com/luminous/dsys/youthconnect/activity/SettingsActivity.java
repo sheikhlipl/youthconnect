@@ -43,6 +43,19 @@ import java.net.URL;
 public class SettingsActivity extends ActionBarActivity implements View.OnClickListener {
 
     private static Toolbar mToolbar = null;
+    public static boolean isActive = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isActive = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isActive = false;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

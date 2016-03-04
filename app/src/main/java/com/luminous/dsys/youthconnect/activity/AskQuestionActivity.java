@@ -21,6 +21,7 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.luminous.dsys.youthconnect.BuildConfig;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.asynctask.PushToAllDeviceAsyncTask;
 import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
@@ -182,6 +183,13 @@ public class AskQuestionActivity extends BaseActivity implements View.OnClickLis
         } catch (CouchbaseLiteException e) {
             com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
         }
+
+        if( Util.getNetworkConnectivityStatus(AskQuestionActivity.this) ) {
+            PushToAllDeviceAsyncTask pushToAllDeviceAsyncTask
+                    = new PushToAllDeviceAsyncTask(AskQuestionActivity.this);
+            pushToAllDeviceAsyncTask.execute();
+        }
+
         return documentId;
     }
 
