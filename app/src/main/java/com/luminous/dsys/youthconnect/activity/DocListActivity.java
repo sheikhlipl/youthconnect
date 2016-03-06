@@ -49,6 +49,19 @@ public class DocListActivity extends BaseActivity implements
     private DocumentListAdapter mAdapter = null;
     private Menu menu;
     private int nr = 0;
+    public static boolean isActive = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isActive = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isActive = false;
+    }
 
     private static final String TAG = "DocListActivity";
 

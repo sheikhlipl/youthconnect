@@ -28,6 +28,8 @@ import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
 import com.luminous.dsys.youthconnect.util.Constants;
+import com.luminous.dsys.youthconnect.util.customHandler;
+import com.pushbots.push.Pushbots;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -191,6 +193,10 @@ public class Application extends android.app.Application {
         Fabric.with(this, new Crashlytics());
         registerActivityLifecycleCallbacks(
                 new LocalyticsActivityLifecycleCallbacks(this));
+        Pushbots.sharedInstance().init(this, getResources().getString(R.string.pb_appid),
+                getResources().getString(R.string.pb_senderid), getResources().getString(R.string.pb_logLevel));
+        Pushbots.sharedInstance().setCustomHandler(customHandler.class);
+        Pushbots.sharedInstance().debug(true);
 
         migrateOldVersion();
 

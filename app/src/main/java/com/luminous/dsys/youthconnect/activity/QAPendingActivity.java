@@ -55,6 +55,19 @@ public class QAPendingActivity extends BaseActivity implements
     private QaListAdapter mAdapter = null;
     private Menu menu;
     private int nr = 0;
+    public static boolean isActive = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isActive = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isActive = false;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

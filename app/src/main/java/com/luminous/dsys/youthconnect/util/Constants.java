@@ -150,4 +150,7 @@ public class Constants {
     public static final String SP_KEY_COUNT_SHOWCASE_EVENTS = "showcase_events_count";
     public static final String SP_KEY_COUNT_DOCUMENT = "documents_count";
     public static final String SP_DEVICE_REGD_ID = "device_regd_id";
+
+    public static final String PUSH_REST_API_REGISTER_URL = "https://api.pushbots.com/deviceToken";
+    public static final String PUSH_REST_API_PUSH_MESSAGE_TO_ALL_DEVICE = "https://api.pushbots.com/push/all";
 }

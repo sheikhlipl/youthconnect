@@ -32,6 +32,8 @@ import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
 import com.luminous.dsys.youthconnect.pojo.User;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
+import com.luminous.dsys.youthconnect.util.customHandler;
+import com.pushbots.push.Pushbots;
 
 import java.util.ArrayList;
 import java.util.Observable;
@@ -42,11 +44,23 @@ public class MainActivity extends BaseActivity
         DashboardFragment.OnFragmentInteractionListener {
 
     private static final String TAG = "MainActivity";
+    public static boolean isActive = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isActive = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isActive = false;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -120,6 +134,14 @@ public class MainActivity extends BaseActivity
                 });
 
         viewPager.getAdapter().notifyDataSetChanged();
+
+        if(getIntent() != null && getIntent().getStringExtra("fragment") != null) {
+            String fragment = getIntent().getStringExtra("fragment");
+            if(fragment != null && fragment.equalsIgnoreCase("showcase")){
+                TabLayout.Tab tab = tabLayout.getTabAt(1);
+                tab.select();
+            }
+        }
     }
 
     @Override

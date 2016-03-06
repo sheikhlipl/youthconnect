@@ -53,6 +53,19 @@ public class QAPublishedActivity extends BaseActivity implements
     private static final String TAG = "QAPublishedActivity";
     private ListView mListView = null;
     private QaListAdapter mAdapter = null;
+    public static boolean isActive = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isActive = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isActive = false;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
