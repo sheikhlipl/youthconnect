@@ -13,6 +13,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -138,17 +139,35 @@ public class DocumentListAdapter extends LiveQueryAdapter {
         holder.item_horizontal_list.setTag(position);
         holder.layoutFileList.setTag(position);
 
+        final Document doc = (Document)getItem(position);
+        int is_publish = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
+        int userId = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_ID);
         int user_type_id = context.getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+        int currently_logged_in_user_id = context.getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_ID, 0);
         if(user_type_id == 2){
             holder.tvSendToNodalOfficers.setVisibility(View.GONE);
-            holder.tvDelete.setVisibility(View.VISIBLE);
             holder.tvPublish.setVisibility(View.GONE);
             holder.tvUnpublish.setVisibility(View.GONE);
+            if(userId == currently_logged_in_user_id && is_publish == 0){
+                holder.tvDelete.setVisibility(View.VISIBLE);
+                holder.imgDownArrow.setVisibility(View.VISIBLE);
+            } else{
+                holder.tvDelete.setVisibility(View.GONE);
+                holder.imgDownArrow.setVisibility(View.GONE);
+            }
         } else{
             holder.tvSendToNodalOfficers.setVisibility(View.VISIBLE);
-            holder.tvDelete.setVisibility(View.VISIBLE);
-            holder.tvPublish.setVisibility(View.VISIBLE);
-            holder.tvUnpublish.setVisibility(View.VISIBLE);
+            if(is_publish == 1){
+                // Published
+                holder.tvDelete.setVisibility(View.GONE);
+                holder.tvPublish.setVisibility(View.GONE);
+                holder.tvUnpublish.setVisibility(View.VISIBLE);
+            } else {
+                // Not published
+                holder.tvDelete.setVisibility(View.VISIBLE);
+                holder.tvPublish.setVisibility(View.VISIBLE);
+                holder.tvUnpublish.setVisibility(View.GONE);
+            }
         }
         holder.imgDownArrow.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -173,7 +192,6 @@ public class DocumentListAdapter extends LiveQueryAdapter {
             }
         });
 
-        final Document doc = (Document)getItem(position);
         String title = (String) doc.getProperty(BuildConfigYouthConnect.DOC_TITLE);
         String userName = (String) doc.getProperty(BuildConfigYouthConnect.DOC_CREATED_BY_USER_NAME);
         String timeStamp = (String) doc.getProperty(BuildConfigYouthConnect.DOC_CREATED);
@@ -862,6 +880,7 @@ public class DocumentListAdapter extends LiveQueryAdapter {
                 InputStream inputStream = attachment.getContent();
                 String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/youth_connect";
                 file = new File(fullPath, file_name);
+                copyInputStreamToFile(inputStream, file);
                 attachment.getContent().close();
             } catch (Exception e) {
                 com.couchbase.lite.util.Log.e(TAG, "Cannot decode the attached image", e);
@@ -871,7 +890,7 @@ public class DocumentListAdapter extends LiveQueryAdapter {
         return file;
     }
 
-    private void copyInputStreamToFile( InputStream in, File file ) {
+    private static void copyInputStreamToFile( InputStream in, File file ) {
         try {
             OutputStream out = new FileOutputStream(file);
             byte[] buf = new byte[1024];

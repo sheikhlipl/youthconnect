@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -19,11 +20,15 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.couchbase.lite.Attachment;
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.activity.MainActivity;
+import com.luminous.dsys.youthconnect.helper.ImageHelper;
 import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
@@ -38,7 +43,9 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by luminousinfoways on 04/01/16.
@@ -47,6 +54,7 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
 
     private LiveQuery liveQuery;
     private Context context;
+    private static final String TAG = "ShowcaseDataAdapterExp";
 
     public ShowcaseDataAdapterExp(Context context, LiveQuery liveQuery) {
         super(context, liveQuery);
@@ -105,11 +113,86 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
             for (String fileName : fileNameList) {
                 fileName.trim().replace(" ", "%20");
             }
-            horizontalAdapter.setData(fileNameList, context);
+            horizontalAdapter.setData(fileNameList, context, task);
             horizontalAdapter.setRowIndex(position);
         }
 
+        ImageView imgUnPublish = (ImageView) view.findViewById(R.id.imgUnPublish);
+        imgUnPublish.setTag(position);
+        imgUnPublish.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos = (Integer) v.getTag();
+                Document task = (Document) getItem(position);
+                unPublishDoc(task);
+            }
+        });
+
         return view;
+    }
+
+    private void unPublishDoc(final Document doc){
+        final int is_publish = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_PUBLISHED);
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(context,
+                R.style.AppCompatAlertDialogStyle);
+        builder1.setTitle("Document Un-Publish");
+        builder1.setMessage("Are you sure want to un-publish this document?");
+        builder1.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                int is_delete = (Integer) doc.getProperty(BuildConfigYouthConnect.DOC_IS_DELETE);
+
+                if (is_delete == 0) {
+                    if(is_publish == 1) {
+                        //Publis document
+                        try {
+                            // Update the document with more data
+                            Map<String, Object> updatedProperties = new HashMap<String, Object>();
+                            updatedProperties.putAll(doc.getProperties());
+                            updatedProperties.put(BuildConfigYouthConnect.DOC_IS_PUBLISHED, 0);
+                            doc.putProperties(updatedProperties);
+                        } catch (CouchbaseLiteException e) {
+                            com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
+                        }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context,
+                                R.style.AppCompatAlertDialogStyle);
+                        builder.setTitle("Un-Publish Document");
+                        builder.setMessage("Done successfully.");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                return;
+                            }
+                        });
+                        builder.show();
+                    } else {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context,
+                                R.style.AppCompatAlertDialogStyle);
+                        builder.setTitle("Un-Publish Document");
+                        builder.setMessage("This document is already unpublished.");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                return;
+                            }
+                        });
+                        builder.show();
+                    }
+                }
+
+                dialog.dismiss();
+            }
+        });
+        builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder1.show();
     }
 
     private String getTimeToShow(String time) throws Exception {
@@ -153,12 +236,13 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
         private int mRowIndex = -1;
         private Context context;
         private String doc_id;
+        private Document document;
 
         public HorizontalAdapter(String doc_id) {
             this.doc_id = doc_id;
         }
 
-        public void setData(List<String> data, Context context) {
+        public void setData(List<String> data, Context context, Document document) {
             if (mDataList != data) {
                 mDataList = data;
                 notifyDataSetChanged();
@@ -166,6 +250,7 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
                 mDataList = new ArrayList<String>();
             }
             this.context = context;
+            this.document = document;
         }
 
         public void setRowIndex(int index) {
@@ -196,30 +281,115 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
         public void onBindViewHolder(RecyclerView.ViewHolder rawHolder, int position) {
             ItemViewHolder holder = (ItemViewHolder) rawHolder;
 
-            holder.img.setImageResource(R.drawable.ic_get_app_black);
-            holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+            //holder.img.setImageResource(R.drawable.ic_get_app_black);
+            //holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
             holder.img.setTag(position);
             holder.progressBar.setTag(position);
+            holder.progressBar.setVisibility(View.GONE);
 
-            String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/youth_connect";
-            File dir = new File(fullPath);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            OutputStream fOut = null;
-            String filename = mDataList.get(position);
-            filename = filename.trim().replace(" ", "%20");
-            File _file = new File(fullPath, filename);
-            if (_file.exists()) {
-                holder.progressBar.setVisibility(View.INVISIBLE);
-                holder.img.setVisibility(View.VISIBLE);
-                setImage(_file, holder, position);
-            } else {
-                if(Util.getNetworkConnectivityStatus(context)) {
-                    BgAsync async = new BgAsync(position, holder, context, doc_id);
-                    async.execute();
+            String file_name = mDataList.get(position);
+            /*Other files*/
+            if (file_name != null && file_name.length() > 0){
+                    /*&& ((file_name.contains("mp4")) ||
+                    (file_name.contains("flv")) ||
+                    (file_name.contains("mkv")) ||
+                    (file_name.contains("mp3")) ||
+                    (file_name.contains("3gp")) ||
+                    (file_name.contains("avi")) ||
+                    (file_name.contains("amr")))){*/
+
+                String extension = Util.getFileExt(file_name);
+
+                if(extension.equalsIgnoreCase("mp3")
+                        || extension.equalsIgnoreCase("amr")
+                        || extension.equalsIgnoreCase("aa")
+                        || extension.equalsIgnoreCase("aac")
+                        || extension.equalsIgnoreCase("aax")
+                        || extension.equalsIgnoreCase("act")
+                        || extension.equalsIgnoreCase("aiff")
+                        || extension.equalsIgnoreCase("ape")
+                        || extension.equalsIgnoreCase("au")
+                        || extension.equalsIgnoreCase("awb")
+                        || extension.equalsIgnoreCase("dct")
+                        || extension.equalsIgnoreCase("dss")
+                        || extension.equalsIgnoreCase("dvf")
+                        || extension.equalsIgnoreCase("flac")
+                        || extension.equalsIgnoreCase("gsm")
+                        || extension.equalsIgnoreCase("iklax")
+                        || extension.equalsIgnoreCase("ivs")
+                        || extension.equalsIgnoreCase("m4a")
+                        || extension.equalsIgnoreCase("m4b")
+                        || extension.equalsIgnoreCase("m4p")
+                        || extension.equalsIgnoreCase("mmf")
+                        || extension.equalsIgnoreCase("mpc")
+                        || extension.equalsIgnoreCase("msv")
+                        || extension.equalsIgnoreCase("ogg")
+                        || extension.equalsIgnoreCase("oga")
+                        || extension.equalsIgnoreCase("wav")
+                        || extension.equalsIgnoreCase("3gp")){
+
+                    // audio
+                    holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                    holder.img.setPadding(10, 10, 10, 10);
+                    holder.img.setImageResource(R.drawable.ic_headset_white);
+                    holder.img.setBackgroundResource(R.drawable.circle_purple_for_audio_icon_bg);
+
+                } else if (((extension.equalsIgnoreCase("mp4")) ||
+                        (extension.equalsIgnoreCase("flv")) ||
+                        (extension.equalsIgnoreCase("3gp")) ||
+                        (extension.equalsIgnoreCase("avi")))){
+                    // Video
+                    holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                    holder.img.setPadding(10, 10, 10, 10);
+                    holder.img.setImageResource(R.drawable.ic_videocam_white);
+                    holder.img.setBackgroundResource(R.drawable.circle_purple_for_record_icon_bg);
+                } else if ( ((extension.equalsIgnoreCase("jpg")) ||
+                        (extension.equalsIgnoreCase("jpeg")) ||
+                        (extension.equalsIgnoreCase("bmp")) ||
+                        (extension.equalsIgnoreCase("png")))) {
+                    // Image
+                    holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                    holder.img.setPadding(10, 10, 10, 10);
+                    holder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
                 } else{
+                    // Document
+                    holder.img.setLayoutParams(new RelativeLayout.LayoutParams(Util.dp2px(70, context), Util.dp2px(70, context)));
+                    holder.img.setPadding(10, 10, 10, 10);
+                    holder.img.setImageResource(R.drawable.ic_insert_drive_file);
+                    holder.img.setBackgroundResource(R.drawable.circle_purple_for_doc_icon_bg);
+                }
 
+                File file = getFileFromAttachment(document, file_name);
+                if(file != null) {
+                    holder.progressBar.setVisibility(View.GONE);
+                    setImage(file, holder, position);
+                } else{
+                    if(Util.getNetworkConnectivityStatus(context)) {
+                        BgAsync async = new BgAsync(position, holder, context, doc_id);
+                        async.execute();
+                    } else{
+                        Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            /* Image */
+            if (file_name != null && file_name.length() > 0
+                    && ((file_name.contains("jpg")) ||
+                    (file_name.contains("jpeg")) ||
+                    (file_name.contains("bmp")) ||
+                    (file_name.contains("png")))) {
+                Bitmap bitmap = getBitmapFromAttachment(document, position);
+                if(bitmap != null){
+                    holder.progressBar.setVisibility(View.GONE);
+                    holder.img.setImageBitmap(bitmap);
+                } else{
+                    if(Util.getNetworkConnectivityStatus(context)) {
+                        BgAsync async = new BgAsync(position, holder, context, doc_id);
+                        async.execute();
+                    } else{
+                        Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         }
@@ -416,23 +586,28 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
                             }
                         }
                     });
-                } else {
+                } /*else {
                     viewHolder.img.setImageResource(R.drawable.ic_get_app_black);
                     viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
-
-                    if(Util.getNetworkConnectivityStatus(context)) {
-                        BgAsync async = new BgAsync(position, viewHolder, context, doc_id);
-                        async.execute();
-                    }
-                }
+                    viewHolder.img.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if(Util.getNetworkConnectivityStatus(context)) {
+                                int pos = (Integer) v.get;
+                                BgAsync async = new BgAsync(pos, viewHolder, context, doc_id);
+                                async.execute();
+                            }
+                        }
+                    });
+                }*/
             } else if (filePath != null && filePath.length() > 0
                     && ((filePath.contains("mp4")) ||
                     (filePath.contains("flv")) ||
                     (filePath.contains("3gp")) ||
                     (filePath.contains("avi")))) {
-                viewHolder.img.setImageResource(R.drawable.ic_play_circle_outline_black);
-                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
-                viewHolder.img.setPadding(12, 12, 12, 12);
+                //viewHolder.img.setImageResource(R.drawable.ic_play_circle_outline_black);
+//                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+//                viewHolder.img.setPadding(12, 12, 12, 12);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -472,8 +647,8 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
 
             } else {
 
-                viewHolder.img.setImageResource(R.drawable.ic_open_in_new_black);
-                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
+//                viewHolder.img.setImageResource(R.drawable.ic_open_in_new_black);
+//                viewHolder.img.setBackgroundResource(R.drawable.transparent_body_blue_border_square);
 
                 viewHolder.img.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -564,7 +739,8 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
             context.startActivity(appIntent);
         } else{
             if(context != null && context instanceof MainActivity) {
-                AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context, R.style.AppCompatAlertDialogStyle);
+                AlertDialog.Builder builder = new AlertDialog.Builder((MainActivity)context,
+                        R.style.AppCompatAlertDialogStyle);
                 builder.setTitle(context.getResources().getString(R.string.no_app_found_title));
                 builder.setMessage(context.getResources().getString(R.string.no_app_found_message));
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -575,6 +751,84 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
                 });
                 builder.show();
             }
+        }
+    }
+
+    private static final int THUMBNAIL_SIZE_PX = 150;
+
+    private static Bitmap getBitmapFromAttachment(Document document, int position){
+
+        if(document == null){
+            return null;
+        }
+
+        Bitmap thumbnail = null;
+        List<Attachment> attachments = document.getCurrentRevision().getAttachments();
+        if (attachments != null && attachments.size() > 0) {
+            Attachment attachment = attachments.get(0);
+            try {
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeStream(attachment.getContent(), null, options);
+                options.inSampleSize = ImageHelper.calculateInSampleSize(
+                        options, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX);
+                attachment.getContent().close();
+
+                // Need to get a new attachment again as the FileInputStream
+                // doesn't support mark and reset.
+                attachments = document.getCurrentRevision().getAttachments();
+                attachment = attachments.get(position);
+                options.inJustDecodeBounds = false;
+                Bitmap bitmap = BitmapFactory.decodeStream(attachment.getContent(), null, options);
+                int w = bitmap.getWidth();
+                int h = bitmap.getHeight();
+                thumbnail = ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX);
+                attachment.getContent().close();
+            } catch (Exception e) {
+                com.couchbase.lite.util.Log.e(TAG, "Cannot decode the attached image", e);
+            }
+        }
+
+        return thumbnail;
+    }
+
+    private static File getFileFromAttachment(Document document, String file_name){
+
+        if(document == null || file_name == null){
+            return null;
+        }
+
+        Bitmap thumbnail = null;
+        File file = null;
+        List<Attachment> attachments = document.getCurrentRevision().getAttachments();
+        if (attachments != null && attachments.size() > 0) {
+            Attachment attachment = attachments.get(0);
+            try {
+                InputStream inputStream = attachment.getContent();
+                String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/youth_connect";
+                file = new File(fullPath, file_name);
+                copyInputStreamToFile(inputStream, file);
+                attachment.getContent().close();
+            } catch (Exception e) {
+                com.couchbase.lite.util.Log.e(TAG, "Cannot decode the attached image", e);
+            }
+        }
+
+        return file;
+    }
+
+    private static void copyInputStreamToFile( InputStream in, File file ) {
+        try {
+            OutputStream out = new FileOutputStream(file);
+            byte[] buf = new byte[1024];
+            int len;
+            while((len=in.read(buf))>0){
+                out.write(buf,0,len);
+            }
+            out.close();
+            in.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

@@ -205,6 +205,7 @@ public class DocListActivity extends BaseActivity implements
 
     @Override
     public void onDeleteClick(final Document doc) {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(DocListActivity.this,
                 R.style.AppCompatAlertDialogStyle);
         builder.setTitle("Document Delete");
