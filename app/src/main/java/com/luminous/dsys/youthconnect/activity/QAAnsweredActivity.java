@@ -246,6 +246,22 @@ public class QAAnsweredActivity extends BaseActivity implements
 
     @Override
     public void onDeleteClick(final Document _qaDoc) {
+        final int is_publish = (Integer) _qaDoc.getProperty(BuildConfigYouthConnect.QA_IS_PUBLISHED);
+        if(is_publish == 1){
+            AlertDialog.Builder builder = new AlertDialog.Builder(QAAnsweredActivity.this,
+                    R.style.AppCompatAlertDialogStyle);
+            builder.setTitle("QA Delete");
+            builder.setMessage("This qa is already published. Un-publish this qa if you want to delete this.");
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.show();
+            return;
+        }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(QAAnsweredActivity.this,
                 R.style.AppCompatAlertDialogStyle);
         builder.setTitle("Delete Question");

@@ -30,13 +30,23 @@
             android:layout_marginLeft="@dimen/showcase_item_card_padding"
             android:layout_marginRight="@dimen/showcase_item_card_padding">
 
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imgUnPublish"
+                android:background="@drawable/circle_red"
+                android:padding="3dp"
+                android:layout_marginLeft="12dp"
+                android:layout_alignParentRight="true"
+                android:src="@drawable/ic_not_interested"/>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Event Name"
-                android:elevation="@dimen/text_elevation"
                 android:textStyle="bold"
+                android:layout_alignBottom="@+id/imgUnPublish"
+                android:layout_toLeftOf="@+id/imgUnPublish"
                 android:layout_marginBottom="10dp"
                 android:textColor="@android:color/primary_text_light"
                 android:id="@+id/tvActivityName" />
@@ -46,9 +56,9 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/tvActivityName"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Event Purpose"
                 android:elevation="@dimen/text_elevation"
-                android:layout_marginBottom="10dp"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp"
                 android:textColor="@android:color/primary_text_light"
                 android:id="@+id/tvActivityPurpose" />
 
@@ -79,7 +89,8 @@
             android:id="@+id/item_horizontal_list"
             android:layout_width="match_parent"
             android:fadeScrollbars="true"
-            android:layout_height="120dp"/>
+            android:layout_height="70dp"
+            android:layout_marginLeft="12dp"/>
 
         <RelativeLayout
             android:layout_width="match_parent"
