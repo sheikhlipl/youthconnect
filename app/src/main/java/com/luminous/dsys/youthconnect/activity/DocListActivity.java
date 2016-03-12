@@ -2,6 +2,7 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
@@ -22,6 +23,7 @@ import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.document.DocumentListAdapter;
+import com.luminous.dsys.youthconnect.login.UserUtil;
 import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
 import com.luminous.dsys.youthconnect.pojo.Doc;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
@@ -112,7 +114,7 @@ public class DocListActivity extends BaseActivity implements
         } else{
             //User is nodal Officer
             if(application.getDocForNodalQuery(application.getDatabase()) != null) {
-                mAdapter = new DocumentListAdapter(this, application.getDocForAdminQuery
+                mAdapter = new DocumentListAdapter(this, application.getDocForNodalQuery
                         (application.getDatabase()).toLiveQuery(),
                         this, this, this);
                 mListView.setAdapter(mAdapter);
@@ -276,6 +278,28 @@ public class DocListActivity extends BaseActivity implements
                             doc.putProperties(updatedProperties);
                         } catch (CouchbaseLiteException e) {
                             com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
+                        }
+                        if(Util.getNetworkConnectivityStatus(DocListActivity.this)){
+                            new AsyncTask<Void, Void, Void>(){
+                                @Override
+                                protected void onPreExecute() {
+                                    super.onPreExecute();
+                                }
+
+                                @Override
+                                protected Void doInBackground(Void... params) {
+                                    String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                    String pushNotificationMessage = user_full_name + " has published a document.";
+                                    UserUtil.pushMessageToSportsServer(DocListActivity.this, "",
+                                            pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.MainActivity", "showcase");
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onPostExecute(Void aVoid) {
+                                    super.onPostExecute(aVoid);
+                                }
+                            }.execute();
                         }
                         AlertDialog.Builder builder = new AlertDialog.Builder(DocListActivity.this,
                                 R.style.AppCompatAlertDialogStyle);

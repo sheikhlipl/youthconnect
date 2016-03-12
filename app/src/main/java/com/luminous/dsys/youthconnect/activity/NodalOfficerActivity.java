@@ -2,6 +2,7 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NavUtils;
@@ -23,6 +24,7 @@ import com.couchbase.lite.Document;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.database.DBHelper;
 import com.luminous.dsys.youthconnect.document.NodalOfficerListViewAdapter;
+import com.luminous.dsys.youthconnect.login.UserUtil;
 import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.AssignedToUSer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
@@ -313,7 +315,6 @@ public class NodalOfficerActivity extends BaseActivity
                     AssignedToUSer assignedToUSer = new AssignedToUSer();
                     assignedToUSer.setUser_name(user_name);
                     assignedToUSer.setUser_id(user_id);
-
                     assignedToUSers.add(assignedToUSer);
                 }
 
@@ -328,6 +329,43 @@ public class NodalOfficerActivity extends BaseActivity
                             updatedProperties.put(BuildConfigYouthConnect.DOC_ASSIGNED_TO_USER_IDS, assignedToUSers);
                             // Save to the Couchbase local Couchbase Lite DB
                             document.putProperties(updatedProperties);
+
+                            if(Util.getNetworkConnectivityStatus(NodalOfficerActivity.this)){
+                                new AsyncTask<Void, Void, Void>(){
+                                    @Override
+                                    protected void onPreExecute() {
+                                        super.onPreExecute();
+                                    }
+
+                                    @Override
+                                    protected Void doInBackground(Void... params) {
+
+                                        String user_ids = "";
+                                        for (int i = 0; i < selectedNodalOfficers.size(); i++) {
+                                            NodalUser user = selectedNodalOfficers.get(i);
+                                            int user_id = user.getUser_id();
+
+                                            if (i > 0) {
+                                                user_ids = user_ids + "," + user_id;
+                                            } else {
+                                                user_ids = user_ids + user_id;
+                                            }
+                                        }
+
+                                        String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                        String pushNotificationMessage = user_full_name + " has assigned you a document.";
+                                        UserUtil.pushMessageToSportsServer(NodalOfficerActivity.this, user_ids,
+                                                pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.DocListActivity", "");
+                                        return null;
+                                    }
+
+                                    @Override
+                                    protected void onPostExecute(Void aVoid) {
+                                        super.onPostExecute(aVoid);
+                                    }
+                                }.execute();
+                            }
+
                         } catch (CouchbaseLiteException e) {
                             com.couchbase.lite.util.Log.e("DocUtil", "Error putting", e);
                         } catch (Exception exception) {
@@ -338,6 +376,7 @@ public class NodalOfficerActivity extends BaseActivity
                     }
                 }
             }
+
             AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
             builder.setTitle("Doc assignment");
             builder.setMessage("Done.");

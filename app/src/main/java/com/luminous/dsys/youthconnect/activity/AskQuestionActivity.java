@@ -2,6 +2,7 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -22,6 +23,7 @@ import com.couchbase.lite.Document;
 import com.luminous.dsys.youthconnect.BuildConfig;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.asynctask.PushToAllDeviceAsyncTask;
+import com.luminous.dsys.youthconnect.login.UserUtil;
 import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
@@ -82,10 +84,10 @@ public class AskQuestionActivity extends BaseActivity implements View.OnClickLis
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
-                            return;
                         }
                     });
                     builder.show();
+                    return;
                 }
 
                 EditText editTextDescription = (EditText) findViewById(R.id.editTextDescription);
@@ -98,10 +100,10 @@ public class AskQuestionActivity extends BaseActivity implements View.OnClickLis
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
-                            return;
                         }
                     });
                     builder.show();
+                    return;
                 }
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
@@ -120,6 +122,29 @@ public class AskQuestionActivity extends BaseActivity implements View.OnClickLis
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     dialog.dismiss();
+
+                                    if(Util.getNetworkConnectivityStatus(AskQuestionActivity.this)){
+                                        new AsyncTask<Void, Void, Void>(){
+                                            @Override
+                                            protected void onPreExecute() {
+                                                super.onPreExecute();
+                                            }
+
+                                            @Override
+                                            protected Void doInBackground(Void... params) {
+                                                String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                                String pushNotificationMessage = user_full_name + " asked a question.";
+                                                UserUtil.pushMessageToSportsServer(AskQuestionActivity.this, "1", pushNotificationMessage,
+                                                        "com.luminous.dsys.youthconnect.activity.QAPendingActivity", "");
+                                                return null;
+                                            }
+
+                                            @Override
+                                            protected void onPostExecute(Void aVoid) {
+                                                super.onPostExecute(aVoid);
+                                            }
+                                        }.execute();
+                                    }
 
                                     Intent intent = new Intent(AskQuestionActivity.this, QAPendingActivity.class);
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -182,12 +207,6 @@ public class AskQuestionActivity extends BaseActivity implements View.OnClickLis
             com.couchbase.lite.util.Log.i(TAG, "Document created.");
         } catch (CouchbaseLiteException e) {
             com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
-        }
-
-        if( Util.getNetworkConnectivityStatus(AskQuestionActivity.this) ) {
-            PushToAllDeviceAsyncTask pushToAllDeviceAsyncTask
-                    = new PushToAllDeviceAsyncTask(AskQuestionActivity.this);
-            pushToAllDeviceAsyncTask.execute();
         }
 
         return documentId;

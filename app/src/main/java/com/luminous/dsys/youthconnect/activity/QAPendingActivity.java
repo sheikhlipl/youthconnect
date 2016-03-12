@@ -2,6 +2,7 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v4.app.NavUtils;
@@ -14,12 +15,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.login.UserUtil;
 import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
@@ -264,6 +267,7 @@ public class QAPendingActivity extends BaseActivity implements
             builder.show();
             return;
         }
+
         AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
                 R.style.AppCompatAlertDialogStyle);
         builder.setTitle("Delete Question");
@@ -389,6 +393,33 @@ public class QAPendingActivity extends BaseActivity implements
                                         updatedProperties.put(BuildConfigYouthConnect.QA_TITLE, mInputedStringForEditQuestionTitle);
                                         updatedProperties.put(BuildConfigYouthConnect.QA_DESC, mInputedStringForEditQuestionDescription);
                                         qaDoc.putProperties(updatedProperties);
+
+                                        if(Util.getNetworkConnectivityStatus(QAPendingActivity.this)){
+                                            new AsyncTask<Void, Void, Void>(){
+                                                @Override
+                                                protected void onPreExecute() {
+                                                    super.onPreExecute();
+                                                }
+
+                                                @Override
+                                                protected Void doInBackground(Void... params) {
+                                                    String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                                    String pushNotificationMessage = user_full_name + " edited a question.";
+                                                    int asked_by_user_id = (Integer) qaDoc.getProperty(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                                                    UserUtil.pushMessageToSportsServer(QAPendingActivity.this, asked_by_user_id+"",
+                                                            pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAAnsweredActivity", "");
+                                                    return null;
+                                                }
+
+                                                @Override
+                                                protected void onPostExecute(Void aVoid) {
+                                                    super.onPostExecute(aVoid);
+                                                }
+                                            }.execute();
+                                        }
+
+
+
                                     } catch (CouchbaseLiteException e) {
                                         Log.e(TAG, "Error putting", e);
                                     }
@@ -493,6 +524,30 @@ public class QAPendingActivity extends BaseActivity implements
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
 
+                                            if(Util.getNetworkConnectivityStatus(QAPendingActivity.this)){
+                                                new AsyncTask<Void, Void, Void>(){
+                                                    @Override
+                                                    protected void onPreExecute() {
+                                                        super.onPreExecute();
+                                                    }
+
+                                                    @Override
+                                                    protected Void doInBackground(Void... params) {
+                                                        String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                                        String pushNotificationMessage = user_full_name + " answered your question.";
+                                                        int asked_by_user_id = (Integer) qaDoc.getProperty(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                                                        UserUtil.pushMessageToSportsServer(QAPendingActivity.this, asked_by_user_id+"",
+                                                                pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAAnsweredActivity", "");
+                                                        return null;
+                                                    }
+
+                                                    @Override
+                                                    protected void onPostExecute(Void aVoid) {
+                                                        super.onPostExecute(aVoid);
+                                                    }
+                                                }.execute();
+                                            }
+
                                             Intent intent = new Intent(QAPendingActivity.this, QAAnsweredActivity.class);
                                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                             startActivity(intent);
@@ -572,7 +627,7 @@ public class QAPendingActivity extends BaseActivity implements
                                     AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
                                             R.style.AppCompatAlertDialogStyle);
                                     builder.setTitle("Edit Answer");
-                                    builder.setMessage("Comment to this question.");
+                                    builder.setMessage("Edit your answer.");
                                     builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
@@ -598,6 +653,7 @@ public class QAPendingActivity extends BaseActivity implements
                                     answer1.setAnswer_by_user_id(answer_by_user_id);
                                     answer1.setAnswer_by_user_name(answer_by_user_name);
                                     answer1.setCreated(currentTimeString);
+                                    answers.add(answer1);
 
                                     try {
                                         // Update the document with more data
@@ -607,6 +663,30 @@ public class QAPendingActivity extends BaseActivity implements
                                         _qaDoc.putProperties(updatedProperties);
                                     } catch (CouchbaseLiteException e) {
                                         Log.e(TAG, "Error putting", e);
+                                    }
+
+                                    if(Util.getNetworkConnectivityStatus(QAPendingActivity.this)){
+                                        new AsyncTask<Void, Void, Void>(){
+                                            @Override
+                                            protected void onPreExecute() {
+                                                super.onPreExecute();
+                                            }
+
+                                            @Override
+                                            protected Void doInBackground(Void... params) {
+                                                String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                                String pushNotificationMessage = user_full_name + " has edited an answered.";
+                                                int asked_by_user_id = (Integer) _qaDoc.getProperty(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                                                UserUtil.pushMessageToSportsServer(QAPendingActivity.this, asked_by_user_id+"",
+                                                        pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAAnsweredActivity", "");
+                                                return null;
+                                            }
+
+                                            @Override
+                                            protected void onPostExecute(Void aVoid) {
+                                                super.onPostExecute(aVoid);
+                                            }
+                                        }.execute();
                                     }
 
                                     AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
@@ -723,7 +803,8 @@ public class QAPendingActivity extends BaseActivity implements
                                         Log.e(TAG, "Error putting", e);
                                     }
 
-                                    AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
+                                    Toast.makeText(QAPendingActivity.this, "Posted", Toast.LENGTH_SHORT).show();
+                                    /*AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,
                                             R.style.AppCompatAlertDialogStyle);
                                     builder.setTitle("Comment on QA");
                                     builder.setMessage("Done successfully.");
@@ -734,7 +815,7 @@ public class QAPendingActivity extends BaseActivity implements
                                             return;
                                         }
                                     });
-                                    builder.show();
+                                    builder.show();*/
                                 }
                             }
                         })
@@ -771,6 +852,29 @@ public class QAPendingActivity extends BaseActivity implements
                     _qaDoc.putProperties(updatedProperties);
                 } catch (CouchbaseLiteException e) {
                     Log.e(TAG, "Error putting", e);
+                }
+
+                if(Util.getNetworkConnectivityStatus(QAPendingActivity.this)){
+                    new AsyncTask<Void, Void, Void>(){
+                        @Override
+                        protected void onPreExecute() {
+                            super.onPreExecute();
+                        }
+
+                        @Override
+                        protected Void doInBackground(Void... params) {
+                            String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                            String pushNotificationMessage = user_full_name + " has published a question.";
+                            UserUtil.pushMessageToSportsServer(QAPendingActivity.this, "",
+                                    pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAPublishedActivity", "");
+                            return null;
+                        }
+
+                        @Override
+                        protected void onPostExecute(Void aVoid) {
+                            super.onPostExecute(aVoid);
+                        }
+                    }.execute();
                 }
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(QAPendingActivity.this,

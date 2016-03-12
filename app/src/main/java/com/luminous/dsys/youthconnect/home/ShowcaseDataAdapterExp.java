@@ -32,6 +32,7 @@ import com.luminous.dsys.youthconnect.helper.ImageHelper;
 import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.util.BuildConfigYouthConnect;
+import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
 
 import java.io.BufferedInputStream;
@@ -118,6 +119,12 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
         }
 
         ImageView imgUnPublish = (ImageView) view.findViewById(R.id.imgUnPublish);
+        int user_type_id = context.getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getInt(Constants.SP_USER_TYPE, 0);
+        if(user_type_id == 1){
+            imgUnPublish.setVisibility(View.VISIBLE);
+        } else{
+            imgUnPublish.setVisibility(View.GONE);
+        }
         imgUnPublish.setTag(position);
         imgUnPublish.setOnClickListener(new View.OnClickListener() {
             @Override

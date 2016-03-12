@@ -1,11 +1,11 @@
 package com.luminous.dsys.youthconnect.activity;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
@@ -17,27 +17,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.couchbase.lite.replicator.Replication;
-import com.couchbase.lite.util.Log;
 import com.crashlytics.android.Crashlytics;
 import com.luminous.dsys.youthconnect.R;
 import com.luminous.dsys.youthconnect.database.DBHelper;
 import com.luminous.dsys.youthconnect.home.DashboardFragment;
 import com.luminous.dsys.youthconnect.home.HomeRecyclerAdapter;
 import com.luminous.dsys.youthconnect.login.LoginActivity;
+import com.luminous.dsys.youthconnect.login.UserUtil;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
 import com.luminous.dsys.youthconnect.pojo.PendingFileToUpload;
-import com.luminous.dsys.youthconnect.pojo.User;
 import com.luminous.dsys.youthconnect.util.Constants;
 import com.luminous.dsys.youthconnect.util.Util;
-import com.luminous.dsys.youthconnect.util.customHandler;
-import com.pushbots.push.Pushbots;
 
 import java.util.ArrayList;
-import java.util.Observable;
-import java.util.Observer;
 
 public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -237,27 +230,27 @@ public class MainActivity extends BaseActivity
         builder.setTitle(title);
         builder.setMessage(message);
         builder.setPositiveButton(positiveButtonText, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                DBHelper dbHelper = new DBHelper(MainActivity.this);
-                dbHelper.deleteAllDataInDatabase();
-                dbHelper.close();
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (Util.getNetworkConnectivityStatus(MainActivity.this)) {
+                            LogoutAsync logoutAsync = new LogoutAsync();
+                            logoutAsync.execute();
+                        } else {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.AppCompatAlertDialogStyle);
+                            builder.setTitle(getResources().getString(R.string.no_internet_connection_title));
+                            builder.setMessage(getResources().getString(R.string.no_internet_connection_message));
+                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                            builder.show();
+                        }
+                    }
+                }
 
-                getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putInt(Constants.SP_LOGIN_STATUS, 0).commit();
-                getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putInt(Constants.SP_USER_ID, 0).commit();
-                getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_API_KEY, null).commit();
-                getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_DESG_ID, null).commit();
-                getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_NAME, null).commit();
-                getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_EMAIL, null).commit();
-
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
-            }
-        });
+        );
         builder.setNegativeButton(negativeButtonText, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -265,5 +258,49 @@ public class MainActivity extends BaseActivity
             }
         });
         builder.show();
+    }
+
+    private class LogoutAsync extends AsyncTask<Void, Void, Void>{
+
+        private ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = ProgressDialog.show(MainActivity.this, "Logout", "Please wait...");
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            UserUtil.registerPushBots(MainActivity.this, true);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if(progressDialog != null){
+                progressDialog.dismiss();
+            }
+
+            DBHelper dbHelper = new DBHelper(MainActivity.this);
+            dbHelper.deleteAllDataInDatabase();
+            dbHelper.close();
+
+            getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putInt(Constants.SP_LOGIN_STATUS, 0).commit();
+            getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putInt(Constants.SP_USER_ID, 0).commit();
+            getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_API_KEY, null).commit();
+            getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_DESG_ID, null).commit();
+            getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_NAME, null).commit();
+            getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 2).edit().putString(Constants.SP_USER_EMAIL, null).commit();
+
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }
     }
 }

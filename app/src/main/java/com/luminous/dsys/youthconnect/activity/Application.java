@@ -343,7 +343,7 @@ public class Application extends android.app.Application {
                         }
 
                         if (is_delete == 0
-                                && count > 0) {
+                                && count > 0 ){
                             emitter.emit(document.get(BuildConfigYouthConnect.DOC_CREATED), document);
                         }
                     }

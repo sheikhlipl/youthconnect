@@ -62,7 +62,7 @@
                                     android:id="@+id/editTextTitle"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:inputType="text"
+                                    android:inputType="textMultiLine"
                                     android:textAppearance="?android:textAppearanceLarge"
                                     android:hint="Title" />
 
@@ -87,7 +87,7 @@
                                 android:id="@+id/editTextDescription"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="text"
+                                android:inputType="textMultiLine"
                                 android:hint="Description" />
 
                         </android.support.design.widget.TextInputLayout>

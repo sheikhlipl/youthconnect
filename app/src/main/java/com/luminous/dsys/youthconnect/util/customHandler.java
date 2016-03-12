@@ -46,7 +46,7 @@ public class customHandler extends BroadcastReceiver
             HashMap<?, ?> PushdataOpen = (HashMap<?, ?>) intent.getExtras().get(PBConstants.EVENT_MSG_OPEN);
             Log.w(TAG, "User clicked notification with Message: " + PushdataOpen.get("message"));
 
-            //Report Opened Push Notification to Pushbots
+//            Report Opened Push Notification to Pushbots
             if (Pushbots.sharedInstance().isAnalyticsEnabled()) {
                 Pushbots.sharedInstance().reportPushOpened((String) PushdataOpen.get("PUSHANALYTICS"));
             }

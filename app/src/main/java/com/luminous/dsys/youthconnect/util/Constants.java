@@ -32,7 +32,8 @@ public class Constants {
     public static final String REQUEST_URL_ADMIN_DOCUMENT_UPDATE = "/WebServices/documentUpdate";
     public static final String REQUEST_URL_DOC_UPLOAD = "/WebServices/adminFileUpload";
     public static final String REQUEST_URL_DOC_CREATE = "/WebServices/adminDocUploadNew";
-    public static final String REQUEST_URL_GET_DEVICE_ID = "/WebServices/userUpdate";
+    public static final String REQUEST_URL_REGISTER_DEVICE_TOKEN_TO_SPORTS_SERVER = "/WebServices/deviceUpdate";
+    public static final String REQUEST_URL_PUSH_MESSAGE_TO_SPORTS_SERVER = "/WebServices/sendMobileNotification";
 
     public static final String YOUTH_CONNECT_DATABASE = "youth_connect";
 

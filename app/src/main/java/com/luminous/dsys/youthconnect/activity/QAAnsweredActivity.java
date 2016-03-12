@@ -2,6 +2,7 @@ package com.luminous.dsys.youthconnect.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v4.app.NavUtils;
@@ -21,6 +22,7 @@ import com.couchbase.lite.Document;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
+import com.luminous.dsys.youthconnect.login.UserUtil;
 import com.luminous.dsys.youthconnect.pojo.Answer;
 import com.luminous.dsys.youthconnect.pojo.Comment;
 import com.luminous.dsys.youthconnect.pojo.FileToUpload;
@@ -387,6 +389,33 @@ public class QAAnsweredActivity extends BaseActivity implements
                                         updatedProperties.put(BuildConfigYouthConnect.QA_TITLE, mInputedStringForEditQuestionTitle);
                                         updatedProperties.put(BuildConfigYouthConnect.QA_DESC, mInputedStringForEditQuestionDescription);
                                         qaDoc.putProperties(updatedProperties);
+
+                                        if(Util.getNetworkConnectivityStatus(QAAnsweredActivity.this)){
+                                            new AsyncTask<Void, Void, Void>(){
+                                                @Override
+                                                protected void onPreExecute() {
+                                                    super.onPreExecute();
+                                                }
+
+                                                @Override
+                                                protected Void doInBackground(Void... params) {
+                                                    String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                                    String pushNotificationMessage = user_full_name + " edited a question.";
+                                                    int asked_by_user_id = (Integer) qaDoc.getProperty(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                                                    UserUtil.pushMessageToSportsServer(QAAnsweredActivity.this, asked_by_user_id+"",
+                                                            pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAAnsweredActivity", "");
+                                                    return null;
+                                                }
+
+                                                @Override
+                                                protected void onPostExecute(Void aVoid) {
+                                                    super.onPostExecute(aVoid);
+                                                }
+                                            }.execute();
+                                        }
+
+
+
                                     } catch (CouchbaseLiteException e) {
                                         Log.e(TAG, "Error putting", e);
                                     }
@@ -490,6 +519,30 @@ public class QAAnsweredActivity extends BaseActivity implements
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
                                             dialog.dismiss();
+
+                                            if(Util.getNetworkConnectivityStatus(QAAnsweredActivity.this)){
+                                                new AsyncTask<Void, Void, Void>(){
+                                                    @Override
+                                                    protected void onPreExecute() {
+                                                        super.onPreExecute();
+                                                    }
+
+                                                    @Override
+                                                    protected Void doInBackground(Void... params) {
+                                                        String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                                        String pushNotificationMessage = user_full_name + " answered your question.";
+                                                        int asked_by_user_id = (Integer) qaDoc.getProperty(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                                                        UserUtil.pushMessageToSportsServer(QAAnsweredActivity.this, asked_by_user_id+"",
+                                                                pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAAnsweredActivity", "");
+                                                        return null;
+                                                    }
+
+                                                    @Override
+                                                    protected void onPostExecute(Void aVoid) {
+                                                        super.onPostExecute(aVoid);
+                                                    }
+                                                }.execute();
+                                            }
 
                                             Intent intent = new Intent(QAAnsweredActivity.this, QAAnsweredActivity.class);
                                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -606,6 +659,30 @@ public class QAAnsweredActivity extends BaseActivity implements
                                         _qaDoc.putProperties(updatedProperties);
                                     } catch (CouchbaseLiteException e) {
                                         Log.e(TAG, "Error putting", e);
+                                    }
+
+                                    if(Util.getNetworkConnectivityStatus(QAAnsweredActivity.this)){
+                                        new AsyncTask<Void, Void, Void>(){
+                                            @Override
+                                            protected void onPreExecute() {
+                                                super.onPreExecute();
+                                            }
+
+                                            @Override
+                                            protected Void doInBackground(Void... params) {
+                                                String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                                                String pushNotificationMessage = user_full_name + " has edited an answered.";
+                                                int asked_by_user_id = (Integer) _qaDoc.getProperty(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                                                UserUtil.pushMessageToSportsServer(QAAnsweredActivity.this, asked_by_user_id+"",
+                                                        pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAAnsweredActivity", "");
+                                                return null;
+                                            }
+
+                                            @Override
+                                            protected void onPostExecute(Void aVoid) {
+                                                super.onPostExecute(aVoid);
+                                            }
+                                        }.execute();
                                     }
 
                                     AlertDialog.Builder builder = new AlertDialog.Builder(QAAnsweredActivity.this,
@@ -771,6 +848,29 @@ public class QAAnsweredActivity extends BaseActivity implements
                     _qaDoc.putProperties(updatedProperties);
                 } catch (CouchbaseLiteException e) {
                     Log.e(TAG, "Error putting", e);
+                }
+
+                if(Util.getNetworkConnectivityStatus(QAAnsweredActivity.this)){
+                    new AsyncTask<Void, Void, Void>(){
+                        @Override
+                        protected void onPreExecute() {
+                            super.onPreExecute();
+                        }
+
+                        @Override
+                        protected Void doInBackground(Void... params) {
+                            String user_full_name = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1).getString(Constants.SP_USER_NAME, "");
+                            String pushNotificationMessage = user_full_name + " has published a question.";
+                            UserUtil.pushMessageToSportsServer(QAAnsweredActivity.this, "",
+                                    pushNotificationMessage, "com.luminous.dsys.youthconnect.activity.QAPublishedActivity", "");
+                            return null;
+                        }
+
+                        @Override
+                        protected void onPostExecute(Void aVoid) {
+                            super.onPostExecute(aVoid);
+                        }
+                    }.execute();
                 }
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(QAAnsweredActivity.this,

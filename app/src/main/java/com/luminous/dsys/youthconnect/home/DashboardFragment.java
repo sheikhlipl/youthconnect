@@ -257,7 +257,6 @@ public class DashboardFragment extends Fragment implements
             liveQuery4.addChangeListener(new LiveQuery.ChangeListener() {
                 @Override
                 public void changed(final LiveQuery.ChangeEvent event) {
-                    //TODO: Revise
                     (getActivity()).runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -277,7 +276,6 @@ public class DashboardFragment extends Fragment implements
         liveQuery3.addChangeListener(new LiveQuery.ChangeListener() {
             @Override
             public void changed(final LiveQuery.ChangeEvent event) {
-                //TODO: Revise
                 (getActivity()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
