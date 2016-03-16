@@ -49,6 +49,7 @@ public class QaListAdapter extends LiveQueryAdapter {
     private boolean isFromAnswered;
     private HashMap<Integer, Boolean> mSelection = new HashMap<Integer, Boolean>();
     private static final String TAG = "QaListAdapter";
+    private String filterText;
 
     public QaListAdapter(Context context, LiveQuery liveQuery,
                          OnDeleteClickListener onDeleteClickListener,
@@ -58,8 +59,8 @@ public class QaListAdapter extends LiveQueryAdapter {
                          OnEditAnswerClickListenr onEditAnswerClickListenr,
                          OnEditQuestionClickListenr onEditQuestionClickListenr,
                          OnCommentClickListenr onCommentClickListenr,
-                         boolean isFromPublished, boolean isFromUnAnswered, boolean isFromAnswered){
-        super(context, liveQuery);
+                         boolean isFromPublished, boolean isFromUnAnswered, boolean isFromAnswered, String filtertext){
+        super(context, liveQuery, filtertext, true);
         this.context = context;
         this.liveQuery = liveQuery;
         this.onDeleteClickListener = onDeleteClickListener;
@@ -72,6 +73,7 @@ public class QaListAdapter extends LiveQueryAdapter {
         this.onEditAnswerClickListenr = onEditAnswerClickListenr;
         this.onEditQuestionClickListenr = onEditQuestionClickListenr;
         this.onCommentClickListenr = onCommentClickListenr;
+        this.filterText = filtertext;
     }
 
     static class ViewHolder {
@@ -355,6 +357,13 @@ public class QaListAdapter extends LiveQueryAdapter {
                 holder.imgDownArrow.setVisibility(View.VISIBLE);
                 holder.editTextPostAnswerOrComment.setVisibility(View.GONE);
             }
+        }
+
+        String qa_title = (String) doc.getProperty(BuildConfigYouthConnect.QA_TITLE);
+        if(qa_title != null && qa_title.trim().length() > 0 && qa_title.contains(filterText)){
+            vi.setVisibility(View.VISIBLE);
+        } else{
+            vi.setVisibility(View.GONE);
         }
 
         return vi;

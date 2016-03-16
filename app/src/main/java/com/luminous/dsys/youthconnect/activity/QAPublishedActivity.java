@@ -1,5 +1,7 @@
 package com.luminous.dsys.youthconnect.activity;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -7,6 +9,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -133,6 +136,40 @@ public class QAPublishedActivity extends BaseActivity implements
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search)
+                .getActionView();
+        searchView.setSearchableInfo(searchManager
+                .getSearchableInfo(getComponentName()));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                try {
+                    showListInListView(query);
+                } catch (CouchbaseLiteException exception) {
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch (IOException exception) {
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch (Exception exception) {
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                try {
+                    showListInListView(newText);
+                } catch (CouchbaseLiteException exception) {
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch (IOException exception) {
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch (Exception exception) {
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                }
+                return true;
+            }
+        });
         return true;
     }
 
@@ -178,7 +215,19 @@ public class QAPublishedActivity extends BaseActivity implements
         if(application.getQAPublishedForQuery(application.getDatabase()) != null) {
             mAdapter = new QaListAdapter(this, application.getQAPublishedForQuery
                     (application.getDatabase()).toLiveQuery(),
-                    this, this, this, this, this, this, this, true, false, false);
+                    this, this, this, this, this, this, this, true, false, false, "");
+            mListView.setAdapter(mAdapter);
+        }
+
+        mListView.setAdapter(mAdapter);
+    }
+
+    private void showListInListView(String filterText) throws CouchbaseLiteException, IOException {
+        mListView = (ListView) findViewById(R.id.listView);
+        if(application.getQAPublishedForQuery(application.getDatabase()) != null) {
+            mAdapter = new QaListAdapter(this, application.getQAPublishedForQuery
+                    (application.getDatabase()).toLiveQuery(),
+                    this, this, this, this, this, this, this, true, false, false, filterText);
             mListView.setAdapter(mAdapter);
         }
 

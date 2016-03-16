@@ -13,4 +13,11 @@
         android:icon="@drawable/ic_attach_file"
         android:title="@string/action_create_document"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_search"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        android:icon="@drawable/ic_search_white"
+        app:showAsAction="always"
+        android:title="Search"/>
 </menu>

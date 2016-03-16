@@ -18,6 +18,8 @@ import com.couchbase.lite.Emitter;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
+import com.couchbase.lite.Reducer;
+import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
@@ -59,6 +61,7 @@ public class Application extends android.app.Application {
 
     private com.couchbase.lite.View qaAnsweredNodalView = null;
     private com.couchbase.lite.View qaUnAnsweredNodalView = null;
+    private com.couchbase.lite.View qaUnAnsweredNodalWithFilterView = null;
 
     private com.couchbase.lite.View qaAnsweredAdminView = null;
     private com.couchbase.lite.View qaUnAnsweredAdminView = null;
@@ -70,6 +73,7 @@ public class Application extends android.app.Application {
 
     private static final String QA_VIEW_NAME_ANSWERED_NODAL = "qalists_answered_nodal";
     private static final String QA_VIEW_NAME_UNANSWERED_NODAL = "qalists_unanswered_nodal";
+    private static final String QA_VIEW_NAME_UNANSWERED_FILTER_NODAL = "qalists_unanswered_filter_nodal";
 
     private static final String QA_VIEW_NAME_ANSWERED_ADMIN = "qalists_answered_admin";
     private static final String QA_VIEW_NAME_UNANSWERED_ADMIN = "qalists_unanswered_admin";
@@ -208,6 +212,7 @@ public class Application extends android.app.Application {
 
         qaAnsweredNodalView = database.getView(QA_VIEW_NAME_ANSWERED_NODAL);
         qaUnAnsweredNodalView = database.getView(QA_VIEW_NAME_UNANSWERED_NODAL);
+        qaUnAnsweredNodalWithFilterView = database.getView(QA_VIEW_NAME_UNANSWERED_FILTER_NODAL);
         qaPublishedView = database.getView(QA_VIEW_NAME_PUBLISHED);
 
         docViewForAdmin = database.getView(DOC_VIEW_NAME_ADMIN);
@@ -277,13 +282,34 @@ public class Application extends android.app.Application {
                         int is_answered = (Integer) document.get(BuildConfigYouthConnect.QA_IS_ANSWERED);
                         int asked_by_user_id = (Integer) document.get(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
                         if( is_delete == 0 && is_answered == 0
-                            && currently_logged_in_user_id == asked_by_user_id) {
+                            && currently_logged_in_user_id == asked_by_user_id ){
                             emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
                         }
                     }
                 }
             };
-            qaUnAnsweredNodalView.setMap(mapper, "1");
+            qaUnAnsweredNodalView.setMap(mapper, "2");
+        }
+
+        if(qaUnAnsweredNodalWithFilterView.getMap() == null){
+            Mapper mapper = new Mapper() {
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if (BuildConfigYouthConnect.DOC_TYPE_FOR_QA.equals(type)){
+                        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 1)
+                                .getInt(Constants.SP_USER_ID, 0);
+                        int is_delete = (Integer) document.get(BuildConfigYouthConnect.QA_IS_DELETE);
+                        int is_answered = (Integer) document.get(BuildConfigYouthConnect.QA_IS_ANSWERED);
+                        int asked_by_user_id = (Integer) document.get(BuildConfigYouthConnect.QA_ASKED_BY_USER_ID);
+                        String title = (String) document.get(BuildConfigYouthConnect.QA_TITLE);
+                        if( is_delete == 0 && is_answered == 0
+                                && currently_logged_in_user_id == asked_by_user_id && title.contains("tes")) {
+                            emitter.emit(document.get(BuildConfigYouthConnect.QA_UPDATED_TIMESTAMP), document);
+                        }
+                    }
+                }
+            };
+            qaUnAnsweredNodalWithFilterView.setMap(mapper, "2");
         }
 
         if (qaPublishedView.getMap() == null) {
@@ -446,7 +472,7 @@ public class Application extends android.app.Application {
         public Replication.ReplicationStatus status;
     }
 
-    public Query getQAUnAnsweredForAdminQuery(Database database) {
+    public Query getQAUnAnsweredForAdminQuery() {
         Query query = qaUnAnsweredAdminView.createQuery();
         query.setDescending(true);
 
@@ -467,7 +493,7 @@ public class Application extends android.app.Application {
         return query;
     }
 
-    public Query getQAUnAnsweredForNodalQuery(Database database) {
+    public Query getQAUnAnsweredForNodalQuery() {
         Query query = qaUnAnsweredNodalView.createQuery();
         query.setDescending(true);
 

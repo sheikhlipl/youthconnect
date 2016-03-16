@@ -1,5 +1,7 @@
 package com.luminous.dsys.youthconnect.activity;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -7,6 +9,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +22,8 @@ import android.widget.Toast;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Document;
+import com.couchbase.lite.Query;
+import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.replicator.Replication;
 import com.couchbase.lite.util.Log;
 import com.luminous.dsys.youthconnect.R;
@@ -130,6 +135,40 @@ public class QAPendingActivity extends BaseActivity implements
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search)
+                .getActionView();
+        searchView.setSearchableInfo(searchManager
+                .getSearchableInfo(getComponentName()));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                try {
+                    showListInListView(query);
+                } catch(CouchbaseLiteException exception){
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch(IOException exception){
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch(Exception exception){
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                try {
+                    showListInListView(newText);
+                } catch(CouchbaseLiteException exception){
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch(IOException exception){
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                } catch(Exception exception){
+                    Log.e(TAG, "onCreateOptionsMenu", exception);
+                }
+                return true;
+            }
+        });
         return true;
     }
 
@@ -178,23 +217,46 @@ public class QAPendingActivity extends BaseActivity implements
 
         if(currently_logged_in_user_id == 1){
             //User is Admin
-            if(application.getQAUnAnsweredForAdminQuery(application.getDatabase()) != null) {
+            if(application.getQAUnAnsweredForAdminQuery() != null) {
                 mAdapter = new QaListAdapter(this, application.getQAUnAnsweredForAdminQuery
-                        (application.getDatabase()).toLiveQuery(),
-                        this, this, this, this, this, this, this, false, true, false);
+                        ().toLiveQuery(),
+                        this, this, this, this, this, this, this, false, true, false, "");
                 mListView.setAdapter(mAdapter);
             }
         } else{
             //User is nodal Officer
-            if(application.getQAUnAnsweredForNodalQuery(application.getDatabase()) != null) {
+            if(application.getQAUnAnsweredForNodalQuery() != null) {
                 mAdapter = new QaListAdapter(this, application.getQAUnAnsweredForNodalQuery
-                        (application.getDatabase()).toLiveQuery(),
-                        this, this, this, this, this, this, this, false, true, false);
+                        ().toLiveQuery(),
+                        this, this, this, this, this, this, this, false, true, false, "");
                 mListView.setAdapter(mAdapter);
             }
         }
+    }
 
+    private void showListInListView(String filtertext) throws CouchbaseLiteException, IOException {
+        mListView = (ListView) findViewById(R.id.listView);
 
+        int currently_logged_in_user_id = getSharedPreferences(Constants.SHAREDPREFERENCE_KEY, 0)
+                .getInt(Constants.SP_USER_ID, 0);
+
+        if(currently_logged_in_user_id == 1){
+            //User is Admin
+            Query query = application.getQAUnAnsweredForAdminQuery();
+            if(query != null) {
+                mAdapter = new QaListAdapter(this, query.toLiveQuery(),
+                        this, this, this, this, this, this, this, false, true, false, filtertext);
+                mListView.setAdapter(mAdapter);
+            }
+        } else {
+            //User is nodal Officer
+            Query query = application.getQAUnAnsweredForNodalQuery();
+            if(query != null) {
+                mAdapter = new QaListAdapter(this, query.toLiveQuery(),
+                        this, this, this, this, this, this, this, false, true, false, filtertext);
+                mListView.setAdapter(mAdapter);
+            }
+        }
     }
 
     @Override

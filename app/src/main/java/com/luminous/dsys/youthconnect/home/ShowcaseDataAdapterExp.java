@@ -57,8 +57,8 @@ public class ShowcaseDataAdapterExp extends LiveQueryAdapter {
     private Context context;
     private static final String TAG = "ShowcaseDataAdapterExp";
 
-    public ShowcaseDataAdapterExp(Context context, LiveQuery liveQuery) {
-        super(context, liveQuery);
+    public ShowcaseDataAdapterExp(Context context, LiveQuery liveQuery, String filterText) {
+        super(context, liveQuery, filterText, false);
         this.liveQuery = liveQuery;
         this.context = context;
     }

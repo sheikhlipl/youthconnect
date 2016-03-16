@@ -73,8 +73,8 @@ public class DocumentListAdapter extends LiveQueryAdapter {
     public DocumentListAdapter(Context context, LiveQuery liveQuery,
                                OnDeleteClickListener onDeleteClickListener,
                                OnUnPublishClickListenr OnUnPublishClickListenr,
-                               OnPublishClickListenr onPublishClickListenr){
-        super(context, liveQuery);
+                               OnPublishClickListenr onPublishClickListenr, String filterText){
+        super(context, liveQuery, filterText, false);
         this.context = context;
         this.liveQuery = liveQuery;
         this.onDeleteClickListener = onDeleteClickListener;

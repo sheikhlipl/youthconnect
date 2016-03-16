@@ -22,6 +22,7 @@ import android.widget.RelativeLayout;
 import android.widget.TabHost;
 import android.widget.TextView;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.replicator.Replication;
@@ -33,6 +34,8 @@ import com.luminous.dsys.youthconnect.activity.QAAnsweredActivity;
 import com.luminous.dsys.youthconnect.activity.QAPendingActivity;
 import com.luminous.dsys.youthconnect.helper.LiveQueryAdapter;
 import com.luminous.dsys.youthconnect.util.Constants;
+
+import java.io.IOException;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -177,7 +180,8 @@ public class DashboardFragment extends Fragment implements
             });
             liveQuery1.start();
 
-            LiveQuery liveQuery2 = application.getQAUnAnsweredForAdminQuery(application.getDatabase()).toLiveQuery();
+
+            LiveQuery liveQuery2 = application.getQAUnAnsweredForAdminQuery().toLiveQuery();
             liveQuery2.addChangeListener(new LiveQuery.ChangeListener() {
                 @Override
                 public void changed(final LiveQuery.ChangeEvent event) {
@@ -234,7 +238,7 @@ public class DashboardFragment extends Fragment implements
             });
             liveQuery1.start();
 
-            LiveQuery liveQuery2 = application.getQAUnAnsweredForNodalQuery(application.getDatabase()).toLiveQuery();
+            LiveQuery liveQuery2 = application.getQAUnAnsweredForNodalQuery().toLiveQuery();
             liveQuery2.addChangeListener(new LiveQuery.ChangeListener() {
                 @Override
                 public void changed(final LiveQuery.ChangeEvent event) {
@@ -374,6 +378,12 @@ public class DashboardFragment extends Fragment implements
         if (mListener != null) {
             mListener.onDashboardFragmentInteraction(this);
         }
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.action_search).setVisible(false);
+        super.onPrepareOptionsMenu(menu);
     }
 
     @Override

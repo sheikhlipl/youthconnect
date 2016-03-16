@@ -1,10 +1,13 @@
 package com.luminous.dsys.youthconnect.home;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -140,6 +143,46 @@ public class ShowcaseFragment extends Fragment implements
     @Override
     public void onCreateOptionsMenu (Menu menu, MenuInflater inflater){
         super.onCreateOptionsMenu(menu, inflater);
+        if(getActivity() != null) {
+            SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+            SearchView searchView = (SearchView) menu.findItem(R.id.action_search)
+                    .getActionView();
+            searchView.setSearchableInfo(searchManager
+                    .getSearchableInfo(getActivity().getComponentName()));
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    if(getView() != null) {
+                        try {
+                            showListInListView(getView(), query);
+                        } catch (CouchbaseLiteException exception) {
+                            com.couchbase.lite.util.Log.e(TAG, "onCreateOptionsMenu", exception);
+                        } catch (IOException exception) {
+                            com.couchbase.lite.util.Log.e(TAG, "onCreateOptionsMenu", exception);
+                        } catch (Exception exception) {
+                            com.couchbase.lite.util.Log.e(TAG, "onCreateOptionsMenu", exception);
+                        }
+                    }
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if(getView() != null) {
+                        try {
+                            showListInListView(getView(), newText);
+                        } catch (CouchbaseLiteException exception) {
+                            com.couchbase.lite.util.Log.e(TAG, "onCreateOptionsMenu", exception);
+                        } catch (IOException exception) {
+                            com.couchbase.lite.util.Log.e(TAG, "onCreateOptionsMenu", exception);
+                        } catch (Exception exception) {
+                            com.couchbase.lite.util.Log.e(TAG, "onCreateOptionsMenu", exception);
+                        }
+                    }
+                    return true;
+                }
+            });
+        }
     }
 
     @Override
@@ -151,7 +194,6 @@ public class ShowcaseFragment extends Fragment implements
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    Log.e("gif--", "fragment back key is clicked");
                     getActivity().getSupportFragmentManager().popBackStack(Constants.FRAGMENT_HOME_SHOWCASE, FragmentManager.POP_BACK_STACK_INCLUSIVE);
                     return true;
                 }
@@ -159,6 +201,11 @@ public class ShowcaseFragment extends Fragment implements
             }
         });
         setHasOptionsMenu(true);
+    }
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.action_search).setVisible(true);
+        super.onPrepareOptionsMenu(menu);
     }
 
     public void setUserVisibleHint(boolean visible)
@@ -255,7 +302,23 @@ public class ShowcaseFragment extends Fragment implements
                 && application != null
                 && application.getPublishedDocQuery(application.getDatabase()) != null) {
             adapter = new ShowcaseDataAdapterExp(getActivity(),
-                    application.getPublishedDocQuery(application.getDatabase()).toLiveQuery());
+                    application.getPublishedDocQuery(application.getDatabase()).toLiveQuery(), "");
+            listView.setAdapter(adapter);
+        }
+    }
+
+    private void showListInListView(View view, String filterText) throws CouchbaseLiteException, IOException {
+        listView = (ListView) view.findViewById(R.id.showcaseEventRecycleList);
+        if(application == null && getActivity() != null
+                && getActivity() instanceof MainActivity) {
+            application = ((MainActivity) getActivity()).application;
+        }
+
+        if(getActivity() != null
+                && application != null
+                && application.getPublishedDocQuery(application.getDatabase()) != null) {
+            adapter = new ShowcaseDataAdapterExp(getActivity(),
+                    application.getPublishedDocQuery(application.getDatabase()).toLiveQuery(), filterText);
             listView.setAdapter(adapter);
         }
     }
