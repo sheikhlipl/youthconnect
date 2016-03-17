@@ -447,7 +447,7 @@ public class DocumentListAdapter extends LiveQueryAdapter {
             }
 
             /* Image */
-            if (file_name != null && file_name.length() > 0
+            /*if (file_name != null && file_name.length() > 0
                     && ((file_name.contains("jpg")) ||
                     (file_name.contains("jpeg")) ||
                     (file_name.contains("bmp")) ||
@@ -464,7 +464,7 @@ public class DocumentListAdapter extends LiveQueryAdapter {
                         Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show();
                     }
                 }
-            }
+            }*/
         }
 
         @Override

@@ -288,7 +288,12 @@ public class DocListActivity extends BaseActivity implements
                         updatedProperties.putAll(doc.getProperties());
                         updatedProperties.put(BuildConfigYouthConnect.DOC_IS_DELETE, 1);
                         doc.putProperties(updatedProperties);
+                        showListInListView("");
                     } catch (CouchbaseLiteException e) {
+                        com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
+                    } catch(IOException e){
+                        com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
+                    } catch(Exception e){
                         com.couchbase.lite.util.Log.e(TAG, "Error putting", e);
                     }
                     AlertDialog.Builder builder = new AlertDialog.Builder(DocListActivity.this,
